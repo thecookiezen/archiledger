@@ -1,4 +1,4 @@
-# Memory MCP Server
+# Archiledge (Memory MCP Server)
 
 Graph based implementation of the Model Context Protocol (MCP) Memory Server.
 
@@ -43,7 +43,7 @@ The server uses `stdio` transport by default.
 
 ### Default (In-Memory)
 ```bash
-java -jar target/memory-mcp-server-0.0.1-SNAPSHOT.jar
+java -jar mcp/target/archiledge-server-0.0.1-SNAPSHOT.jar
 ```
 
 ### With Neo4j (Embedded)
@@ -51,7 +51,7 @@ This mode runs a Neo4j server inside the application process.
 
 **Transient (Data lost on restart):**
 ```bash
-java -Dspring.profiles.active=neo4j -Dspring.neo4j.uri=embedded -jar target/memory-mcp-server-0.0.1-SNAPSHOT.jar
+java -Dspring.profiles.active=neo4j -Dspring.neo4j.uri=embedded -jar mcp/target/archiledge-server-0.0.1-SNAPSHOT.jar
 ```
 
 **Persistent (Data saved to file):**
@@ -60,7 +60,7 @@ Set the `memory.neo4j.data-dir` property to a directory path.
 java -Dspring.profiles.active=neo4j \
      -Dspring.neo4j.uri=embedded \
      -Dmemory.neo4j.data-dir=./neo4j-data \
-     -jar target/memory-mcp-server-0.0.1-SNAPSHOT.jar
+     -jar mcp/target/archiledge-server-0.0.1-SNAPSHOT.jar
 ```
 
 ### With Neo4j (External)
@@ -70,7 +70,7 @@ Configure Neo4j connection details in `application.properties` or via environmen
 export SPRING_NEO4J_URI=bolt://localhost:7687
 export SPRING_NEO4J_AUTHENTICATION_USERNAME=neo4j
 export SPRING_NEO4J_AUTHENTICATION_PASSWORD=secret
-java -Dspring.profiles.active=neo4j -jar target/memory-mcp-server-0.0.1-SNAPSHOT.jar
+java -Dspring.profiles.active=neo4j -jar mcp/target/archiledge-server-0.0.1-SNAPSHOT.jar
 ```
 
 ## Configuration
@@ -79,6 +79,6 @@ Configuration is located in `src/main/resources/application.properties`.
 
 ```properties
 spring.ai.mcp.server.transport=stdio
-spring.ai.mcp.server.name=memory-server
+spring.ai.mcp.server.name=archiledge-server
 spring.ai.mcp.server.version=1.0.0
 ```

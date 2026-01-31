@@ -2,6 +2,7 @@ package com.thecookiezen.archiledge.infrastructure.config;
 
 import org.neo4j.harness.Neo4j;
 import org.neo4j.harness.Neo4jBuilders;
+import org.neo4j.cypherdsl.core.renderer.Dialect;
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
@@ -37,5 +38,10 @@ class EmbeddedNeo4jConfig {
     @ConditionalOnProperty(name = "spring.neo4j.uri", matchIfMissing = true, havingValue = "embedded")
     public Driver neo4jDriver(Neo4j neo4j) {
         return GraphDatabase.driver(neo4j.boltURI(), AuthTokens.none());
+    }
+
+    @Bean
+    org.neo4j.cypherdsl.core.renderer.Configuration cypherDslConfiguration() {
+        return org.neo4j.cypherdsl.core.renderer.Configuration.newConfig().withDialect(Dialect.NEO4J_5).build();
     }
 }
