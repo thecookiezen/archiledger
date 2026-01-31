@@ -3,18 +3,18 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.example</groupId>
-        <artifactId>memory-mcp-parent</artifactId>
+        <groupId>com.thecookiezen</groupId>
+        <artifactId>archiledge-parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>memory-mcp-server</artifactId>
-    <name>memory-mcp-server</name>
+    <artifactId>archiledge-server</artifactId>
+    <name>archiledge-server</name>
     <description>MCP Server Implementation</description>
 
     <dependencies>
         <dependency>
-            <groupId>com.example</groupId>
-            <artifactId>memory-mcp-core</artifactId>
+            <groupId>com.thecookiezen</groupId>
+            <artifactId>archiledge-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

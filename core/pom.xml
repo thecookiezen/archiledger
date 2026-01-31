@@ -3,12 +3,12 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.example</groupId>
-        <artifactId>memory-mcp-parent</artifactId>
+        <groupId>com.thecookiezen</groupId>
+        <artifactId>archiledge-parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>memory-mcp-core</artifactId>
-    <name>memory-mcp-core</name>
+    <artifactId>archiledge-core</artifactId>
+    <name>archiledge-core</name>
     <description>Core domain and persistence logic</description>
 
     <dependencies>

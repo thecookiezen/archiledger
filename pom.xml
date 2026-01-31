@@ -8,10 +8,10 @@
         <version>3.4.2</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.example</groupId>
-    <artifactId>memory-mcp-parent</artifactId>
+    <groupId>com.thecookiezen</groupId>
+    <artifactId>archiledge-parent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>memory-mcp-parent</name>
+    <name>archiledge-parent</name>
     <description>Parent POM for Memory MCP Server</description>
     <packaging>pom</packaging>
 
@@ -35,8 +35,8 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
-                <groupId>com.example</groupId>
-                <artifactId>memory-mcp-core</artifactId>
+                <groupId>com.thecookiezen</groupId>
+                <artifactId>archiledge-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

@@ -42,7 +42,7 @@ jobs:
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       uses: actions/upload-artifact@v4
       with:
-        name: memory-mcp-server-${{ steps.get_version.outputs.version }}
+        name: archiledge-server-${{ steps.get_version.outputs.version }}
         path: target/*.jar
         retention-days: 1
 
@@ -59,7 +59,7 @@ jobs:
     - name: Download Artifact
       uses: actions/download-artifact@v4
       with:
-        name: memory-mcp-server-${{ needs.build-and-test.outputs.project_version }}
+        name: archiledge-server-${{ needs.build-and-test.outputs.project_version }}
         path: target
         
     - name: Set up Docker Buildx
@@ -78,6 +78,6 @@ jobs:
         push: true
         # Push with multiple tags: latest, commit SHA, and the maven version
         tags: |
-          ${{ secrets.DOCKERHUB_USERNAME }}/memory-mcp-server:latest
-          ${{ secrets.DOCKERHUB_USERNAME }}/memory-mcp-server:${{ github.sha }}
-          ${{ secrets.DOCKERHUB_USERNAME }}/memory-mcp-server:${{ needs.build-and-test.outputs.project_version }}
+          ${{ secrets.DOCKERHUB_USERNAME }}/archiledge-server:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/archiledge-server:${{ github.sha }}
+          ${{ secrets.DOCKERHUB_USERNAME }}/archiledge-server:${{ needs.build-and-test.outputs.project_version }}
