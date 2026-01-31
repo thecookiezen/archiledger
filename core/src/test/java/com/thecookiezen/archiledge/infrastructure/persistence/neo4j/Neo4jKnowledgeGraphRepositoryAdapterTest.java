@@ -38,8 +38,6 @@ class Neo4jKnowledgeGraphRepositoryAdapterTest {
     @DynamicPropertySource
     static void neo4jProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.neo4j.uri", neo4jContainer::getBoltUrl);
-        registry.add("spring.neo4j.authentication.username", () -> "neo4j");
-        registry.add("spring.neo4j.authentication.password", neo4jContainer::getAdminPassword);
     }
 
     @AfterAll
