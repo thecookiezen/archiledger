@@ -38,8 +38,6 @@ class Neo4jKnowledgeGraphRepositoryAdapterTest {
     @DynamicPropertySource
     static void neo4jProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.neo4j.uri", neo4jContainer::getBoltUrl);
-        registry.add("spring.neo4j.authentication.username", () -> "neo4j");
-        registry.add("spring.neo4j.authentication.password", neo4jContainer::getAdminPassword);
     }
 
     @AfterAll
@@ -59,24 +57,24 @@ class Neo4jKnowledgeGraphRepositoryAdapterTest {
 
         List<Entity> results = repository.findAllEntities();
         assertFalse(results.isEmpty());
-        boolean found = results.stream().anyMatch(e -> e.name().equals(new EntityId("IntegrationTest")));
+        boolean found = results.stream().anyMatch(e -> e.name().equals(entity.name()));
         assert (found);
     }
 
     @Test
     void saveAndFindRelation() {
-        Entity e1 = new Entity("N1", "T");
-        Entity e2 = new Entity("N2", "T");
-        repository.saveEntity(e1);
-        repository.saveEntity(e2);
+        Entity sourceEntity = new Entity("SourceEntity", "TestType");
+        Entity targetEntity = new Entity("TargetEntity", "TestType");
+        repository.saveEntity(sourceEntity);
+        repository.saveEntity(targetEntity);
 
-        Relation relation = new Relation("N1", "N2", "TEST_REL");
+        Relation relation = new Relation("SourceEntity", "TargetEntity", "TEST_RELATION");
         repository.saveRelation(relation);
 
         List<Relation> relations = repository.findAllRelations();
         boolean found = relations.stream()
-                .anyMatch(r -> r.from().equals(new EntityId("N1")) && r.to().equals(new EntityId("N2"))
-                        && r.relationType().equals(new RelationType("TEST_REL")));
+                .anyMatch(r -> r.from().equals(new EntityId("SourceEntity")) && r.to().equals(new EntityId("TargetEntity"))
+                        && r.relationType().equals(new RelationType("TEST_RELATION")));
         assert (found);
     }
 }
