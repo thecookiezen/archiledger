@@ -2,13 +2,17 @@ package com.thecookiezen.archiledge.application.service;
 
 import com.thecookiezen.archiledge.domain.model.Entity;
 import com.thecookiezen.archiledge.domain.model.EntityId;
+import com.thecookiezen.archiledge.domain.model.EntityType;
 import com.thecookiezen.archiledge.domain.model.Relation;
+import com.thecookiezen.archiledge.domain.model.RelationType;
 import com.thecookiezen.archiledge.domain.repository.KnowledgeGraphRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 @Service
 class KnowledgeGraphServiceImpl implements KnowledgeGraphService {
@@ -42,11 +46,6 @@ class KnowledgeGraphServiceImpl implements KnowledgeGraphService {
     }
 
     @Override
-    public List<Entity> searchNodes(String query) {
-        return repository.searchEntities(query);
-    }
-
-    @Override
     public void deleteEntities(List<EntityId> ids) {
         for (EntityId id : ids) {
             repository.deleteEntity(id);
@@ -58,5 +57,40 @@ class KnowledgeGraphServiceImpl implements KnowledgeGraphService {
         for (Relation r : relationsToDelete) {
             repository.deleteRelation(r);
         }
+    }
+
+    @Override
+    public Optional<Entity> getEntity(EntityId id) {
+        return repository.findEntityById(id);
+    }
+
+    @Override
+    public List<Entity> getEntitiesByType(EntityType type) {
+        return repository.findEntitiesByType(type);
+    }
+
+    @Override
+    public List<Relation> getRelationsForEntity(EntityId entityId) {
+        return repository.findRelationsForEntity(entityId);
+    }
+
+    @Override
+    public List<Relation> getRelationsByType(RelationType type) {
+        return repository.findRelationsByType(type);
+    }
+
+    @Override
+    public List<Entity> getRelatedEntities(EntityId entityId) {
+        return repository.findRelatedEntities(entityId);
+    }
+
+    @Override
+    public Set<EntityType> getEntityTypes() {
+        return repository.findAllEntityTypes();
+    }
+
+    @Override
+    public Set<RelationType> getRelationTypes() {
+        return repository.findAllRelationTypes();
     }
 }

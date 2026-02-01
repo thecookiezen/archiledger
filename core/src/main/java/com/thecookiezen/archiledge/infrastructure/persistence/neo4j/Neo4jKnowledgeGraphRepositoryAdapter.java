@@ -2,7 +2,9 @@ package com.thecookiezen.archiledge.infrastructure.persistence.neo4j;
 
 import com.thecookiezen.archiledge.domain.model.Entity;
 import com.thecookiezen.archiledge.domain.model.EntityId;
+import com.thecookiezen.archiledge.domain.model.EntityType;
 import com.thecookiezen.archiledge.domain.model.Relation;
+import com.thecookiezen.archiledge.domain.model.RelationType;
 import com.thecookiezen.archiledge.domain.repository.KnowledgeGraphRepository;
 import com.thecookiezen.archiledge.infrastructure.persistence.neo4j.model.Neo4jEntity;
 import com.thecookiezen.archiledge.infrastructure.persistence.neo4j.model.Neo4jRelationConnection;
@@ -14,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Repository
@@ -85,13 +89,6 @@ class Neo4jKnowledgeGraphRepositoryAdapter implements KnowledgeGraphRepository {
     }
 
     @Override
-    public List<Entity> searchEntities(String query) {
-        return neo4jRepository.searchEntities(query).stream()
-                .map(this::toDomainEntity)
-                .collect(Collectors.toList());
-    }
-
-    @Override
     @Transactional
     public void deleteEntity(EntityId id) {
         neo4jRepository.deleteById(id.value());
@@ -109,5 +106,59 @@ class Neo4jKnowledgeGraphRepositoryAdapter implements KnowledgeGraphRepository {
 
     private Entity toDomainEntity(Neo4jEntity neo4jEntity) {
         return new Entity(neo4jEntity.getName(), neo4jEntity.getType(), neo4jEntity.getObservations());
+    }
+
+    @Override
+    public Optional<Entity> findEntityById(EntityId id) {
+        return neo4jRepository.findById(id.value())
+                .map(this::toDomainEntity);
+    }
+
+    @Override
+    public List<Entity> findEntitiesByType(EntityType type) {
+        return neo4jRepository.findByType(type.value()).stream()
+                .map(this::toDomainEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Relation> findRelationsForEntity(EntityId entityId) {
+        return neo4jRepository.findRelationsForEntity(entityId.value()).stream()
+                .map(this::mapToRelation)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Relation> findRelationsByType(RelationType type) {
+        return neo4jRepository.findRelationsByRelationType(type.value()).stream()
+                .map(this::mapToRelation)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Entity> findRelatedEntities(EntityId entityId) {
+        return neo4jRepository.findRelatedEntities(entityId.value()).stream()
+                .map(this::toDomainEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Set<EntityType> findAllEntityTypes() {
+        return neo4jRepository.findAllEntityTypes().stream()
+                .filter(type -> type != null && !type.isBlank())
+                .map(EntityType::new)
+                .collect(Collectors.toSet());
+    }
+
+    @Override
+    public Set<RelationType> findAllRelationTypes() {
+        return neo4jRepository.findAllRelationTypes().stream()
+                .filter(type -> type != null && !type.isBlank())
+                .map(RelationType::new)
+                .collect(Collectors.toSet());
+    }
+
+    private Relation mapToRelation(java.util.Map<String, String> map) {
+        return new Relation(map.get("fromName"), map.get("toName"), map.get("relationType"));
     }
 }
