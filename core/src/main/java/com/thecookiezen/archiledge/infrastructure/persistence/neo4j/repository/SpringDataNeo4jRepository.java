@@ -6,7 +6,6 @@ import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Map;
 
 @Repository
 public interface SpringDataNeo4jRepository extends Neo4jRepository<Neo4jEntity, String> {
@@ -21,10 +20,10 @@ public interface SpringDataNeo4jRepository extends Neo4jRepository<Neo4jEntity, 
         List<Neo4jEntity> findByType(String type);
 
         @Query("MATCH (source:Entity)-[r:RELATED_TO]->(target:Entity) WHERE source.name = $entityName OR target.name = $entityName RETURN source.name AS fromName, target.name AS toName, r.relationType AS relationType")
-        List<Map<String, String>> findRelationsForEntity(String entityName);
+        List<RelationProjection> findRelationsForEntity(String entityName);
 
         @Query("MATCH (source:Entity)-[r:RELATED_TO]->(target:Entity) WHERE r.relationType = $relationType RETURN source.name AS fromName, target.name AS toName, r.relationType AS relationType")
-        List<Map<String, String>> findRelationsByRelationType(String relationType);
+        List<RelationProjection> findRelationsByRelationType(String relationType);
 
         @Query("MATCH (n:Entity)-[r:RELATED_TO]-(m:Entity) WHERE n.name = $entityName RETURN DISTINCT m")
         List<Neo4jEntity> findRelatedEntities(String entityName);

@@ -8,6 +8,7 @@ import com.thecookiezen.archiledge.domain.model.RelationType;
 import com.thecookiezen.archiledge.domain.repository.KnowledgeGraphRepository;
 import com.thecookiezen.archiledge.infrastructure.persistence.neo4j.model.Neo4jEntity;
 import com.thecookiezen.archiledge.infrastructure.persistence.neo4j.model.Neo4jRelationConnection;
+import com.thecookiezen.archiledge.infrastructure.persistence.neo4j.repository.RelationProjection;
 import com.thecookiezen.archiledge.infrastructure.persistence.neo4j.repository.SpringDataNeo4jRepository;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
@@ -158,7 +159,7 @@ class Neo4jKnowledgeGraphRepositoryAdapter implements KnowledgeGraphRepository {
                 .collect(Collectors.toSet());
     }
 
-    private Relation mapToRelation(java.util.Map<String, String> map) {
-        return new Relation(map.get("fromName"), map.get("toName"), map.get("relationType"));
+    private Relation mapToRelation(RelationProjection projection) {
+        return new Relation(projection.fromName(), projection.toName(), projection.relationType());
     }
 }
