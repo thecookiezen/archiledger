@@ -61,3 +61,6 @@ Thumbs.db
 
 # Docker
 docker-compose.override.yml
+
+# Neo4j
+neo4j-data
