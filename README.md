@@ -1,12 +1,12 @@
-# Archiledge
+# Archiledger
 
 **Give your AI assistant a persistent memory and the power to build knowledge graphs.**
 
-Archiledge is a [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that enables LLM-based assistants to store, connect, and recall information using a graph database. Whether you need a personal memory bank that persists across conversations or want to analyze codebases and documents into structured knowledge graphs, Archiledge provides the infrastructure to make your AI truly remember.
+Archiledger is a [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that enables LLM-based assistants to store, connect, and recall information using a graph database. Whether you need a personal memory bank that persists across conversations or want to analyze codebases and documents into structured knowledge graphs, Archiledger provides the infrastructure to make your AI truly remember.
 
 > **⚠️ Disclaimer:** This server currently implements **no authentication** mechanisms. Additionally, it relies on an **embedded graph database** (or in-memory storage) which is designed and optimized for **local development and testing environments only**. It is **not recommended for production use** in its current state.
 
-## Why Archiledge?
+## Why Archiledger?
 
 LLMs are powerful, but they forget everything the moment a conversation ends. This creates frustrating experiences:
 
@@ -14,9 +14,9 @@ LLMs are powerful, but they forget everything the moment a conversation ends. Th
 - **Lost insights** — Valuable analysis from one session isn't available in the next
 - **No connected thinking** — Information lives in silos without relationships between concepts
 
-Archiledge solves this by giving your AI a **graph-based memory**:
+Archiledger solves this by giving your AI a **graph-based memory**:
 
-| Problem | Archiledge Solution |
+| Problem | Archiledger Solution |
 |---------|---------------------|
 | Context resets every conversation | Persistent storage that survives restarts |
 | Flat, disconnected notes | Graph structure with entities and relations |
@@ -65,7 +65,7 @@ The server uses streamable HTTP transport by default on port **8080**.
 
 ### Default (In-Memory)
 ```bash
-java -jar mcp/target/archiledge-server-0.0.1-SNAPSHOT.jar
+java -jar mcp/target/archiledger-server-0.0.1-SNAPSHOT.jar
 ```
 
 ### With Neo4j (Embedded)
@@ -73,7 +73,7 @@ This mode runs a Neo4j server inside the application process.
 
 **Transient (Data lost on restart):**
 ```bash
-java -Dspring.profiles.active=neo4j -Dspring.neo4j.uri=embedded -jar mcp/target/archiledge-server-0.0.1-SNAPSHOT.jar
+java -Dspring.profiles.active=neo4j -Dspring.neo4j.uri=embedded -jar mcp/target/archiledger-server-0.0.1-SNAPSHOT.jar
 ```
 
 **Persistent (Data saved to file):**
@@ -82,13 +82,13 @@ Set the `memory.neo4j.data-dir` property to a directory path.
 java -Dspring.profiles.active=neo4j \
      -Dspring.neo4j.uri=embedded \
      -Dmemory.neo4j.data-dir=./neo4j-data \
-     -jar mcp/target/archiledge-server-0.0.1-SNAPSHOT.jar
+     -jar mcp/target/archiledger-server-0.0.1-SNAPSHOT.jar
 ```
 
 > **💡 Tip: Viewing the Graph with Neo4j Browser**
 >
 > When using embedded Neo4j, you can visualize your graph using [Neo4j Browser](https://github.com/neo4j/neo4j-browser). The embedded database exposes a Bolt endpoint on a dynamic port:
-> 1. **Keep** the Archiledge server running.
+> 1. **Keep** the Archiledger server running.
 > 2. Check the server logs for the Bolt URI, e.g.: `Driver instance ... created for server uri 'bolt://localhost:35157'`
 > 3. Open Neo4j Browser (default: http://localhost:8080) and connect using the Bolt URI from the logs.
 > 4. Run Cypher queries like `MATCH (n) RETURN n` to explore your knowledge graph.
@@ -100,7 +100,7 @@ Configure Neo4j connection details in `application.properties` or via environmen
 export SPRING_NEO4J_URI=bolt://localhost:7687
 export SPRING_NEO4J_AUTHENTICATION_USERNAME=neo4j
 export SPRING_NEO4J_AUTHENTICATION_PASSWORD=secret
-java -Dspring.profiles.active=neo4j -jar mcp/target/archiledge-server-0.0.1-SNAPSHOT.jar
+java -Dspring.profiles.active=neo4j -jar mcp/target/archiledger-server-0.0.1-SNAPSHOT.jar
 ```
 
 ## Configuration
@@ -108,7 +108,7 @@ java -Dspring.profiles.active=neo4j -jar mcp/target/archiledge-server-0.0.1-SNAP
 Configuration is located in `src/main/resources/application.properties`.
 
 ```properties
-spring.ai.mcp.server.name=archiledge-server
+spring.ai.mcp.server.name=archiledger-server
 spring.ai.mcp.server.version=1.0.0
 spring.ai.mcp.server.protocol=STREAMABLE
 server.port=8080
@@ -258,14 +258,14 @@ Use the graph for code investigation:
 
 ### MCP Server Configuration for LLM Clients
 
-Configure your LLM client to connect to the Archiledge MCP server. Below are examples for common clients.
+Configure your LLM client to connect to the Archiledger MCP server. Below are examples for common clients.
 
 #### Gemini CLI (`settings.json`)
 
 ```json
 {
   "mcpServers": {
-    "archiledge": {
+    "archiledger": {
       "httpUrl": "http://localhost:8080/mcp"
     }
   }
@@ -277,7 +277,7 @@ Configure your LLM client to connect to the Archiledge MCP server. Below are exa
 ```json
 {
   "servers": {
-    "archiledge": {
+    "archiledger": {
       "type": "http",
       "url": "http://localhost:8080/mcp"
     }
@@ -290,7 +290,7 @@ Configure your LLM client to connect to the Archiledge MCP server. Below are exa
 ```json
 {
   "mcpServers": {
-      "archiledge": {
+      "archiledger": {
           "serverUrl": "http://localhost:8080/mcp"
       }
   }
