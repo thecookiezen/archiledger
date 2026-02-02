@@ -39,7 +39,7 @@ mvn clean package
 
 ## Running
 
-The server uses `sse` (Server-Sent Events) HTTP streaming transport by default on port **8080**.
+The server uses streamable HTTP transport by default on port **8080**.
 
 ### Default (In-Memory)
 ```bash
@@ -78,14 +78,13 @@ java -Dspring.profiles.active=neo4j -jar mcp/target/archiledge-server-0.0.1-SNAP
 Configuration is located in `src/main/resources/application.properties`.
 
 ```properties
-spring.ai.mcp.server.transport=sse
 spring.ai.mcp.server.name=archiledge-server
 spring.ai.mcp.server.version=1.0.0
+spring.ai.mcp.server.protocol=STREAMABLE
 server.port=8080
 ```
 
 ## MCP Client Connection
 
 Once the server is running, MCP clients can connect via:
-- **SSE Endpoint**: `http://localhost:8080/sse`
-- **Message Endpoint**: `http://localhost:8080/mcp/message`
+- **Streamable HTTP Endpoint**: `http://localhost:8080/mcp`
