@@ -3,6 +3,8 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ "main" ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ "main" ]
 
@@ -14,10 +16,15 @@ jobs:
     name: Build and Test
     runs-on: ubuntu-latest
     outputs:
-      project_version: ${{ steps.get_version.outputs.version }}
+      version: ${{ steps.get_version.outputs.version }}
     
     steps:
     - uses: actions/checkout@v4
+
+    - name: Extract version from tag
+      id: get_version
+      if: startsWith(github.ref, 'refs/tags/v')
+      run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
     
     - name: Set up JDK 21
       uses: actions/setup-java@v4
@@ -25,21 +32,18 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         cache: 'maven'
-
-    - name: Extract Maven Version
-      id: get_version
-      run: |
-        VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-        echo "Detected project version: $VERSION"
         
     - name: Build and Verify with Maven
-      run: mvn clean verify
+      run: |
+        if [ -n "${{ steps.get_version.outputs.version }}" ]; then
+          mvn clean verify -Drevision=${{ steps.get_version.outputs.version }}
+        else
+          mvn clean verify
+        fi
       
     # Upload the built jar as an artifact to be used by the docker job
-    # The artifact name includes the version for better traceability
     - name: Upload Artifact
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      if: startsWith(github.ref, 'refs/tags/v')
       uses: actions/upload-artifact@v4
       with:
         name: archiledge-server-${{ steps.get_version.outputs.version }}
@@ -50,8 +54,8 @@ jobs:
     name: Publish Docker Image
     needs: build-and-test
     runs-on: ubuntu-latest
-    # Only run on push to main branch (after merge)
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Only run when a tag starting with 'v' is pushed
+    if: startsWith(github.ref, 'refs/tags/v')
     
     steps:
     - uses: actions/checkout@v4
@@ -59,7 +63,7 @@ jobs:
     - name: Download Artifact
       uses: actions/download-artifact@v4
       with:
-        name: archiledge-server-${{ needs.build-and-test.outputs.project_version }}
+        name: archiledge-server-${{ needs.build-and-test.outputs.version }}
         path: target
         
     - name: Set up Docker Buildx
@@ -76,8 +80,8 @@ jobs:
       with:
         context: .
         push: true
-        # Push with multiple tags: latest, commit SHA, and the maven version
+        # Push with version (without v prefix) and latest
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/archiledge-server:latest
-          ${{ secrets.DOCKERHUB_USERNAME }}/archiledge-server:${{ github.sha }}
-          ${{ secrets.DOCKERHUB_USERNAME }}/archiledge-server:${{ needs.build-and-test.outputs.project_version }}
+          ${{ secrets.DOCKERHUB_USERNAME }}/archiledge-server:${{ needs.build-and-test.outputs.version }}
+
