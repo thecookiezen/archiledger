@@ -30,12 +30,21 @@ The graph model is particularly powerful because knowledge isn't flat — concep
 
 - **Knowledge Graph**: Stores entities and relations.
 - **MCP Tools**:
-  - `create_entities`: Create new entities.
-  - `create_relations`: Create relations between entities.
-  - `read_graph`: Read the entire graph.
-  - `search_nodes`: Search for entities.
-  - `delete_entities`: Delete entities by name.
-  - `delete_relations`: Delete relations.
+  - **Entity Management**:
+    - `create_entities`: Create new entities in the knowledge graph. Entities are nodes representing things like people, places, concepts, etc.
+    - `get_entity`: Get a specific entity by its name. Returns the entity with its type and observations.
+    - `get_entities_by_type`: Get all entities of a specific type (e.g., Person, Component, Service).
+    - `delete_entities`: Delete entities from the knowledge graph by their names.
+  - **Relation Management**:
+    - `create_relations`: Create relations between entities. Relations are edges representing how entities are connected.
+    - `get_relations_for_entity`: Get all relations (incoming and outgoing) for a specific entity.
+    - `get_relations_by_type`: Get all relations of a specific type (e.g., DEPENDS_ON, USES, CONTAINS).
+    - `delete_relations`: Delete relations from the knowledge graph.
+  - **Graph Exploration**:
+    - `read_graph`: Read the entire knowledge graph. Returns all entities and relations.
+    - `get_related_entities`: Find all entities directly connected to a given entity.
+    - `get_entity_types`: List all unique entity types in the graph.
+    - `get_relation_types`: List all unique relation types in the graph.
 
 ## Architecture
 
@@ -315,7 +324,7 @@ Configure your LLM client to connect to the Archiledger MCP server. Below are ex
 }
 ```
 
-#### VSCode / Copilot (MCP extension)
+#### VSCode / GitHub Copilot (`settings.json`)
 
 ```json
 {
@@ -339,3 +348,21 @@ Configure your LLM client to connect to the Archiledger MCP server. Below are ex
   }
 }
 ```
+
+### Docker Container Tips for MCP Clients
+
+1. **Persistent Data**: Always mount a volume (`-v`) to preserve your knowledge graph across container restarts.
+
+2. **Container Lifecycle**: Run the container separately with `-d` (detached mode).
+
+3. **Port Conflicts**: If port 8080 is in use, map to a different host port (e.g., `-p 9090:8080`) and update the URL accordingly.
+
+4. **Named Containers**: Use `--name archiledger` to easily manage the container:
+   ```bash
+   docker stop archiledger && docker rm archiledger
+   ```
+
+5. **Check Container Logs**: Debug connection issues with:
+   ```bash
+   docker logs archiledger
+   ```
