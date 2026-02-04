@@ -23,4 +23,10 @@ EXPOSE 8080 7687
 # Volume mount point for Neo4j data
 VOLUME ["/data/neo4j"]
 
-ENTRYPOINT java -Dspring.profiles.active=neo4j -Dspring.neo4j.uri=embedded -Dmemory.neo4j.data-dir=${NEO4J_DATA_DIR} -Dmemory.neo4j.bolt-port=${NEO4J_BOLT_PORT} -jar app.jar
+ENTRYPOINT ["java", \
+           "-Dspring.profiles.active=neo4j", \
+           "-Dspring.neo4j.uri=embedded", \
+           "-Dmemory.neo4j.data-dir=${NEO4J_DATA_DIR}", \
+           "-Dmemory.neo4j.bolt-port=${NEO4J_BOLT_PORT}", \
+           "-jar", \
+           "app.jar"]
