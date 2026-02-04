@@ -5,6 +5,7 @@ import com.thecookiezen.archiledger.domain.model.EntityId;
 import com.thecookiezen.archiledger.domain.model.EntityType;
 import com.thecookiezen.archiledger.domain.model.Relation;
 import com.thecookiezen.archiledger.domain.model.RelationType;
+import com.thecookiezen.archiledger.domain.repository.EmbeddingsService;
 import com.thecookiezen.archiledger.domain.repository.KnowledgeGraphRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +28,9 @@ class KnowledgeGraphServiceImplTest {
 
     @Mock
     private KnowledgeGraphRepository repository;
+
+    @Mock
+    private EmbeddingsService embeddingsService;
 
     @InjectMocks
     private KnowledgeGraphServiceImpl service;
