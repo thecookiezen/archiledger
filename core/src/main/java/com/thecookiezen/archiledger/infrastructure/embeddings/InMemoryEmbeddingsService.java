@@ -37,4 +37,9 @@ public class InMemoryEmbeddingsService implements EmbeddingsService {
                 .map(Document::toString)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public void deleteEmbeddings(List<String> idList) {
+        vectorStore.delete(idList);
+    }
 }

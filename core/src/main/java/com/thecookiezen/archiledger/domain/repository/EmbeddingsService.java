@@ -9,4 +9,6 @@ public interface EmbeddingsService {
     public float[] generateEmbeddings(Entity entity);
 
     public List<String> findClosestMatch(String text);
+
+    public void deleteEmbeddings(List<String> idList);
 }

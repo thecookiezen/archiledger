@@ -53,6 +53,7 @@ class KnowledgeGraphServiceImpl implements KnowledgeGraphService {
     public void deleteEntities(List<EntityId> ids) {
         for (EntityId id : ids) {
             repository.deleteEntity(id);
+            embeddingsService.deleteEmbeddings(List.of(id.toString()));
         }
     }
 
