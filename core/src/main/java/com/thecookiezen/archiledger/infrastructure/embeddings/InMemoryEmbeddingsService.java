@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -15,6 +17,7 @@ import com.thecookiezen.archiledger.domain.repository.EmbeddingsService;
 @Service
 public class InMemoryEmbeddingsService implements EmbeddingsService {
 
+    private final Logger logger = LoggerFactory.getLogger(InMemoryEmbeddingsService.class);
     private final EmbeddingModel embeddingModel;
     private final VectorStore vectorStore;
 
@@ -24,11 +27,11 @@ public class InMemoryEmbeddingsService implements EmbeddingsService {
     }
 
     @Override
-    public float[] generateEmbeddings(Entity entity) {
+    public void generateEmbeddings(Entity entity) {
         float[] embeddings = embeddingModel.embed(entity.observationsJoined());
+        logger.info("Generated embeddings for entity: {}", embeddings);
         vectorStore.add(List.of(
                 new Document(entity.name().toString(), entity.observationsJoined(), Collections.emptyMap())));
-        return embeddings;
     }
 
     @Override

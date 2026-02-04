@@ -6,7 +6,7 @@ import com.thecookiezen.archiledger.domain.model.Entity;
 
 public interface EmbeddingsService {
 
-    public float[] generateEmbeddings(Entity entity);
+    public void generateEmbeddings(Entity entity);
 
     public List<String> findClosestMatch(String text);
 
