@@ -1,6 +1,7 @@
 package com.thecookiezen.archiledger.domain.model;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public record Entity(EntityId name, EntityType type, List<String> observations) {
     public Entity {
@@ -19,5 +20,9 @@ public record Entity(EntityId name, EntityType type, List<String> observations) 
 
     public Entity(String name, String type, List<String> observations) {
         this(new EntityId(name), new EntityType(type), observations);
+    }
+
+    public String observationsJoined() {
+        return observations.stream().collect(Collectors.joining());
     }
 }

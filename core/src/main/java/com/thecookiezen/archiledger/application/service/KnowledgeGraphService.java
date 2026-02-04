@@ -35,4 +35,6 @@ public interface KnowledgeGraphService {
     Set<EntityType> getEntityTypes();
 
     Set<RelationType> getRelationTypes();
+
+    List<String> similaritySearch(String query);
 }

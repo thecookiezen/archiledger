@@ -121,4 +121,10 @@ public class McpToolAdapter {
                                 .map(RelationType::value)
                                 .collect(Collectors.toList());
         }
+
+        @Tool(name = "similarity_search", description = "Find entities most similar to a given query based on embeddings.")
+        public List<String> similaritySearch(
+                        @ToolParam(description = "Query to find similar entities for") String query) {
+                return knowledgeGraphService.similaritySearch(query);
+        }
 }
