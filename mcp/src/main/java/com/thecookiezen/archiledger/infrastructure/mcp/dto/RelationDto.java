@@ -11,10 +11,10 @@ public record RelationDto(
             throw new IllegalArgumentException("Relation from cannot be null or blank");
         }
         if (to == null || to.isBlank()) {
-            throw new IllegalArgumentException("Relation to cannot be null or blank");
+            throw new IllegalArgumentException("Relation target entity cannot be null or blank");
         }
         if (relationType == null || relationType.isBlank()) {
-            throw new IllegalArgumentException("Relation type cannot be null or blank");
+            throw new IllegalArgumentException("RelationType cannot be null or blank");
         }
     }
 
