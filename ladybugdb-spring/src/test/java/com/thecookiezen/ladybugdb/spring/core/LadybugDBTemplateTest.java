@@ -1,7 +1,9 @@
-package com.thecookiezen.ladybugdb.spring;
+package com.thecookiezen.ladybugdb.spring.core;
 
 import com.ladybugdb.Connection;
 import com.ladybugdb.Database;
+import com.thecookiezen.ladybugdb.spring.connection.SimpleConnectionFactory;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -10,35 +12,44 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class CypherTemplateTest {
+class LadybugDBTemplateTest {
 
-    private CypherTemplate cypherTemplate;
-    private Connection conn;
+    private LadybugDBTemplate template;
+    private SimpleConnectionFactory connectionFactory;
     private Database db;
 
     @BeforeEach
     void setup() {
         db = new Database(":memory:");
-        conn = new Connection(db);
-        conn.query("CREATE NODE TABLE Person(name STRING PRIMARY KEY, age INT64)");
-        cypherTemplate = new CypherTemplate(conn);
+        try (Connection conn = new Connection(db)) {
+            conn.query("CREATE NODE TABLE Person(name STRING PRIMARY KEY, age INT64)");
+        }
+        connectionFactory = new SimpleConnectionFactory(db);
+        template = new LadybugDBTemplate(connectionFactory);
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (connectionFactory != null) {
+            connectionFactory.close();
+        }
     }
 
     @Test
     void execute_shouldRunWriteQuery() {
-        cypherTemplate.execute("CREATE (p:Person {name: 'Alice', age: 30})");
+        template.execute("CREATE (p:Person {name: 'Alice', age: 30})");
 
-        List<String> names = cypherTemplate.queryForStringList("MATCH (p:Person) RETURN p.name", 0);
+        List<String> names = template.queryForStringList("MATCH (p:Person) RETURN p.name", 0);
         assertEquals(1, names.size());
         assertEquals("Alice", names.get(0));
     }
 
     @Test
     void query_shouldMapResultsUsingRowMapper() {
-        cypherTemplate.execute("CREATE (p:Person {name: 'Bob', age: 25})");
-        cypherTemplate.execute("CREATE (p:Person {name: 'Charlie', age: 35})");
+        template.execute("CREATE (p:Person {name: 'Bob', age: 25})");
+        template.execute("CREATE (p:Person {name: 'Charlie', age: 35})");
 
-        List<PersonRecord> people = cypherTemplate.query(
+        List<PersonRecord> people = template.query(
                 "MATCH (p:Person) RETURN p.name, p.age ORDER BY p.name",
                 (row, rowNum) -> new PersonRecord(
                         row.getValue(0).getValue().toString(),
@@ -53,9 +64,9 @@ class CypherTemplateTest {
 
     @Test
     void queryForObject_shouldReturnSingleResult() {
-        cypherTemplate.execute("CREATE (p:Person {name: 'David', age: 40})");
+        template.execute("CREATE (p:Person {name: 'David', age: 40})");
 
-        Optional<PersonRecord> result = cypherTemplate.queryForObject(
+        Optional<PersonRecord> result = template.queryForObject(
                 "MATCH (p:Person) WHERE p.name = 'David' RETURN p.name, p.age",
                 (row, rowNum) -> new PersonRecord(
                         row.getValue(0).getValue().toString(),
@@ -68,7 +79,7 @@ class CypherTemplateTest {
 
     @Test
     void queryForObject_shouldReturnEmptyWhenNoResults() {
-        Optional<PersonRecord> result = cypherTemplate.queryForObject(
+        Optional<PersonRecord> result = template.queryForObject(
                 "MATCH (p:Person) WHERE p.name = 'NonExistent' RETURN p.name, p.age",
                 (row, rowNum) -> new PersonRecord(
                         row.getValue(0).getValue().toString(),
@@ -79,10 +90,10 @@ class CypherTemplateTest {
 
     @Test
     void queryForStringList_shouldReturnListOfStrings() {
-        cypherTemplate.execute("CREATE (p:Person {name: 'Eve', age: 28})");
-        cypherTemplate.execute("CREATE (p:Person {name: 'Frank', age: 33})");
+        template.execute("CREATE (p:Person {name: 'Eve', age: 28})");
+        template.execute("CREATE (p:Person {name: 'Frank', age: 33})");
 
-        List<String> names = cypherTemplate.queryForStringList(
+        List<String> names = template.queryForStringList(
                 "MATCH (p:Person) RETURN p.name ORDER BY p.name", 0);
 
         assertEquals(2, names.size());
@@ -92,11 +103,11 @@ class CypherTemplateTest {
 
     @Test
     void query_shouldProvideRowNumberToMapper() {
-        cypherTemplate.execute("CREATE (p:Person {name: 'G1', age: 1})");
-        cypherTemplate.execute("CREATE (p:Person {name: 'G2', age: 2})");
-        cypherTemplate.execute("CREATE (p:Person {name: 'G3', age: 3})");
+        template.execute("CREATE (p:Person {name: 'G1', age: 1})");
+        template.execute("CREATE (p:Person {name: 'G2', age: 2})");
+        template.execute("CREATE (p:Person {name: 'G3', age: 3})");
 
-        List<Integer> rowNumbers = cypherTemplate.query(
+        List<Integer> rowNumbers = template.query(
                 "MATCH (p:Person) RETURN p.name ORDER BY p.name",
                 (row, rowNum) -> rowNum);
 

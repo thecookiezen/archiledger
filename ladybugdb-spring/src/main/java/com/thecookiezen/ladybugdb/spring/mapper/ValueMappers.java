@@ -1,4 +1,4 @@
-package com.thecookiezen.ladybugdb.spring;
+package com.thecookiezen.ladybugdb.spring.mapper;
 
 import com.ladybugdb.LbugList;
 import com.ladybugdb.Value;
@@ -135,30 +135,18 @@ public final class ValueMappers {
         }
     }
 
-    /**
-     * Maps a Value containing a list to a List of Strings.
-     */
     public static List<String> asStringList(Value value) {
         return asList(value, Function.identity());
     }
 
-    /**
-     * Maps a Value containing a list to a List of Integers.
-     */
     public static List<Integer> asIntegerList(Value value) {
         return asList(value, Integer::parseInt);
     }
 
-    /**
-     * Maps a Value containing a list to a List of Longs.
-     */
     public static List<Long> asLongList(Value value) {
         return asList(value, Long::parseLong);
     }
 
-    /**
-     * Maps a Value containing a list to a List of Doubles.
-     */
     public static List<Double> asDoubleList(Value value) {
         return asList(value, Double::parseDouble);
     }

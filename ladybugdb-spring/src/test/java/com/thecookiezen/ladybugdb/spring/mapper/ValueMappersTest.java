@@ -1,4 +1,4 @@
-package com.thecookiezen.ladybugdb.spring;
+package com.thecookiezen.ladybugdb.spring.mapper;
 
 import com.ladybugdb.Connection;
 import com.ladybugdb.Database;

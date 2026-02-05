@@ -2,7 +2,7 @@ package com.thecookiezen.ladybugdb.spring.core;
 
 import com.ladybugdb.Connection;
 import com.ladybugdb.QueryResult;
-import com.thecookiezen.ladybugdb.spring.RowMapper;
+import com.thecookiezen.ladybugdb.spring.mapper.RowMapper;
 import com.thecookiezen.ladybugdb.spring.connection.LadybugDBConnectionFactory;
 import org.neo4j.cypherdsl.core.Statement;
 import org.slf4j.Logger;
