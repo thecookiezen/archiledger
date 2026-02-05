@@ -3,7 +3,10 @@ package com.thecookiezen.ladybugdb.spring.core;
 import com.ladybugdb.Connection;
 import com.ladybugdb.Database;
 import com.thecookiezen.ladybugdb.spring.connection.SimpleConnectionFactory;
+
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,23 +18,35 @@ import static org.junit.jupiter.api.Assertions.*;
 class LadybugDBTemplateTest {
 
     private LadybugDBTemplate template;
-    private SimpleConnectionFactory connectionFactory;
-    private Database db;
+    private static SimpleConnectionFactory connectionFactory;
+    private static Database db;
+
+    @BeforeAll
+    static void setupAll() {
+        db = new Database(":memory:");
+        connectionFactory = new SimpleConnectionFactory(db);
+    }
 
     @BeforeEach
     void setup() {
-        db = new Database(":memory:");
+        template = new LadybugDBTemplate(connectionFactory);
         try (Connection conn = new Connection(db)) {
             conn.query("CREATE NODE TABLE Person(name STRING PRIMARY KEY, age INT64)");
         }
-        connectionFactory = new SimpleConnectionFactory(db);
-        template = new LadybugDBTemplate(connectionFactory);
     }
 
     @AfterEach
     void tearDown() {
+        template.execute("MATCH (n) DETACH DELETE n");
+    }
+
+    @AfterAll
+    static void tearDownAll() {
         if (connectionFactory != null) {
             connectionFactory.close();
+        }
+        if (db != null) {
+            db.close();
         }
     }
 

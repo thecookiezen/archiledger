@@ -5,6 +5,7 @@ import com.ladybugdb.Database;
 import com.thecookiezen.ladybugdb.spring.connection.SimpleConnectionFactory;
 import com.thecookiezen.ladybugdb.spring.core.ConnectionHolder;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.transaction.TransactionDefinition;
@@ -14,16 +15,22 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.AfterAll;
+
 class LadybugDBTransactionManagerTest {
 
-    private Database db;
-    private SimpleConnectionFactory connectionFactory;
+    private static Database db;
+    private static SimpleConnectionFactory connectionFactory;
     private LadybugDBTransactionManager transactionManager;
+
+    @BeforeAll
+    static void setupAll() {
+        db = new Database(":memory:");
+        connectionFactory = new SimpleConnectionFactory(db);
+    }
 
     @BeforeEach
     void setup() {
-        db = new Database(":memory:");
-        connectionFactory = new SimpleConnectionFactory(db);
         transactionManager = new LadybugDBTransactionManager(connectionFactory);
 
         if (TransactionSynchronizationManager.hasResource(connectionFactory)) {
@@ -36,8 +43,15 @@ class LadybugDBTransactionManagerTest {
         if (TransactionSynchronizationManager.hasResource(connectionFactory)) {
             TransactionSynchronizationManager.unbindResource(connectionFactory);
         }
+    }
+
+    @AfterAll
+    static void tearDownAll() {
         if (connectionFactory != null) {
             connectionFactory.close();
+        }
+        if (db != null) {
+            db.close();
         }
     }
 

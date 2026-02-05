@@ -3,7 +3,10 @@ package com.thecookiezen.ladybugdb.spring.mapper;
 import com.ladybugdb.Connection;
 import com.ladybugdb.Database;
 import com.ladybugdb.QueryResult;
-import org.junit.jupiter.api.BeforeEach;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -13,13 +16,29 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ValueMappersTest {
 
-    private Connection conn;
-    private Database db;
+    private static Connection conn;
+    private static Database db;
 
-    @BeforeEach
-    void setup() {
+    @BeforeAll
+    static void setup() {
         db = new Database(":memory:");
         conn = new Connection(db);
+    }
+
+    @AfterEach
+    void tearDownEach() {
+        conn.query("MATCH (n) DETACH DELETE n");
+        conn.query("DROP TABLE IF EXISTS Test");
+    }
+
+    @AfterAll
+    static void tearDown() {
+        if (conn != null) {
+            conn.close();
+        }
+        if (db != null) {
+            db.close();
+        }
     }
 
     @Nested
