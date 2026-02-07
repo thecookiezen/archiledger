@@ -220,8 +220,6 @@ public class SimpleNodeRepository<T, R, ID> implements NodeRepository<T, ID, R, 
                         statement = matchMerge.returning(s, t, rel).build();
                 }
 
-                logger.info("Statement: {}", statement);
-
                 return template.queryForObject(statement, relationshipDescriptor.reader())
                                 .orElseThrow(() -> new RuntimeException(
                                                 "Failed to create relationship: " + relationship));
