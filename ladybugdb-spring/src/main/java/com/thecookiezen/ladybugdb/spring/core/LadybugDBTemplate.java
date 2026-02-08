@@ -245,7 +245,7 @@ public class LadybugDBTemplate {
 
     private Map<String, Value> convertParameters(Map<String, Object> parameters) {
         Map<String, Value> converted = new HashMap<>();
-        parameters.forEach((key, value) -> converted.put(key, new Value(value)));
+        parameters.forEach((key, value) -> converted.put(key, value != null ? new Value(value) : Value.createNull()));
         return converted;
     }
 
