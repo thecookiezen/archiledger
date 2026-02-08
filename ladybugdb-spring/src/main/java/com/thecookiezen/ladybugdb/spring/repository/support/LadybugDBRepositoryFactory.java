@@ -2,11 +2,18 @@ package com.thecookiezen.ladybugdb.spring.repository.support;
 
 import com.thecookiezen.ladybugdb.spring.core.LadybugDBTemplate;
 import com.thecookiezen.ladybugdb.spring.repository.NodeRepository;
+import com.thecookiezen.ladybugdb.spring.repository.query.LadybugQueryLookupStrategy;
+
+import java.util.Optional;
+
 import org.springframework.core.ResolvableType;
 import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
+import org.springframework.data.repository.query.QueryLookupStrategy;
+import org.springframework.data.repository.query.QueryLookupStrategy.Key;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 
 /**
  * Factory for creating LadybugDB repository instances.
@@ -26,6 +33,12 @@ public class LadybugDBRepositoryFactory extends RepositoryFactorySupport {
     @Override
     public <T, ID> EntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
         return new LadybugDBEntityInformation<>(domainClass);
+    }
+
+    @Override
+    protected Optional<QueryLookupStrategy> getQueryLookupStrategy(Key key,
+            ValueExpressionDelegate valueExpressionDelegate) {
+        return Optional.of(new LadybugQueryLookupStrategy(template, entityRegistry));
     }
 
     @SuppressWarnings("unchecked")

@@ -1,6 +1,7 @@
 package com.thecookiezen.ladybugdb.spring.core;
 
 import com.ladybugdb.Connection;
+import com.ladybugdb.PreparedStatement;
 import com.ladybugdb.QueryResult;
 import com.ladybugdb.Value;
 import com.thecookiezen.ladybugdb.spring.connection.LadybugDBConnectionFactory;
@@ -57,13 +58,17 @@ public class LadybugDBTemplate {
         }
     }
 
+    public void execute(String cypher) {
+        execute(cypher, Map.of());
+    }
+
     /**
      * Execute a Cypher statement (typically for write operations).
      *
      * @param statement the Cypher DSL statement
      */
     public void execute(Statement statement) {
-        execute(statement.getCypher());
+        execute(statement.getCypher(), Map.of());
     }
 
     /**
@@ -71,10 +76,12 @@ public class LadybugDBTemplate {
      *
      * @param cypher the Cypher query string
      */
-    public void execute(String cypher) {
+    public void execute(String cypher, Map<String, Object> parameters) {
         execute(connection -> {
             logger.debug("Executing Cypher: {}", cypher);
-            QueryResult result = connection.query(cypher);
+            PreparedStatement statement = connection.prepare(cypher);
+            Map<String, Value> valueParameters = convertParameters(parameters);
+            QueryResult result = connection.execute(statement, valueParameters);
             logger.debug("Execute result: {}", result);
             return null;
         });
@@ -89,7 +96,7 @@ public class LadybugDBTemplate {
      * @return list of mapped results
      */
     public <T> List<T> query(Statement statement, RowMapper<T> rowMapper) {
-        return query(statement.getCypher(), rowMapper);
+        return query(statement.getCypher(), Map.of(), rowMapper);
     }
 
     /**
@@ -101,10 +108,23 @@ public class LadybugDBTemplate {
      * @return list of mapped results
      */
     public <T> List<T> query(String cypher, RowMapper<T> rowMapper) {
+        return query(cypher, Map.of(), rowMapper);
+    }
+
+    /**
+     * Execute a raw Cypher query and map results using the provided RowMapper.
+     *
+     * @param cypher    the Cypher query string
+     * @param rowMapper the mapper to convert each row
+     * @param <T>       the result type
+     * @return list of mapped results
+     */
+    public <T> List<T> query(String cypher, Map<String, Object> parameters, RowMapper<T> rowMapper) {
         return execute(connection -> {
             logger.debug("Querying with Cypher: {}", cypher);
 
-            QueryResult result = connection.query(cypher);
+            PreparedStatement statement = connection.prepare(cypher);
+            QueryResult result = connection.execute(statement, convertParameters(parameters));
             List<T> results = new ArrayList<>();
             int rowNum = 0;
 
@@ -223,9 +243,12 @@ public class LadybugDBTemplate {
         return TransactionSynchronizationManager.hasResource(connectionFactory);
     }
 
-    /**
-     * Exception thrown when mapping a row fails.
-     */
+    private Map<String, Value> convertParameters(Map<String, Object> parameters) {
+        Map<String, Value> converted = new HashMap<>();
+        parameters.forEach((key, value) -> converted.put(key, value != null ? new Value(value) : Value.createNull()));
+        return converted;
+    }
+
     public static class CypherMappingException extends RuntimeException {
         public CypherMappingException(String message, Throwable cause) {
             super(message, cause);

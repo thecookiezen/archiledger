@@ -9,6 +9,7 @@ A Spring Data-like integration framework for [LadybugDB](https://ladybugdb.com),
 - **Connection Pooling**: Built-in connection pooling via `PooledConnectionFactory`
 - **Cypher DSL Integration**: Use [Neo4j Cypher DSL](https://github.com/neo4j/cypher-dsl) for type-safe query building
 - **Entity Mapping**: Annotation-based entity mapping with `@NodeEntity` and `@Id`
+- **Custom Queries**: Support for `@Query` annotation on repository interfaces
 
 ## Quick Start
 
@@ -116,15 +117,31 @@ RowMapper<Follows> followsMapper = (row) -> {
 };
 ```
 
+### use Custom Queries
+
+You can execute custom Cypher queries using the `@Query` annotation on your repository interface.
+
+```java
+public interface PersonRepository extends NodeRepository<Person, String, Void, Person> {
+
+    @Query("MATCH (p:Person) WHERE p.age > $minAge RETURN p")
+    List<Person> findByAgeGreaterThan(@Param("minAge") int minAge);
+
+    @Query("MATCH (p:Person {name: $name}) SET p.age = $newAge RETURN p")
+    Optional<Person> updateAge(@Param("name") String name, @Param("newAge") int newAge);
+}
+```
+
 ## Components
 
 | Component | Description |
 |-----------|-------------|
 | `LadybugDBTemplate` | Central class for executing Cypher queries |
 | `SimpleNodeRepository` | Repository implementation for node entities |
-| `LadybugDBTransactionManager` | Spring transaction manager (connection binding) |
+| `LadybugDBTransactionManager` | Transaction manager (connection binding only, no commit/rollback) |
 | `PooledConnectionFactory` | Connection pool using Apache Commons Pool2 |
 | `SimpleConnectionFactory` | Simple connection factory (no pooling) |
+| `rowMapper` / `QueryRow` | Interface for mapping query results to domain objects |
 
 ## Limitations
 

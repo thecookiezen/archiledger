@@ -33,6 +33,11 @@ public final class DefaultQueryRow implements QueryRow {
     }
 
     @Override
+    public Value getValue(int index) {
+        return index >= 0 && index < values.length ? values[index] : null;
+    }
+
+    @Override
     public Value getValue(String column) {
         Integer index = columnToIndex.get(column);
         return index != null && index < values.length ? values[index] : null;

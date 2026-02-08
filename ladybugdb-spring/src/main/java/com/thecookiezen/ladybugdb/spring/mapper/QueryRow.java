@@ -25,6 +25,14 @@ public interface QueryRow {
     Value getValue(String column);
 
     /**
+     * Gets the raw Value at the specified column index.
+     *
+     * @param index the column index (0-based)
+     * @return the Value, or null if the index is out of bounds
+     */
+    Value getValue(int index);
+
+    /**
      * Checks if the row contains a column with the given name.
      *
      * @param column the column name
