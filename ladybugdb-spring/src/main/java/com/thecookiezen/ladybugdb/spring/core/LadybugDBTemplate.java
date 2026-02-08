@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -29,6 +28,10 @@ import java.util.stream.StreamSupport;
  * Transaction-aware template for LadybugDB operations.
  * Central class for executing Cypher queries with proper
  * connection and transaction management.
+ * <p>
+ * When used within a Spring transaction, the same connection is reused
+ * for all operations. Outside a transaction, a new connection is obtained
+ * and released for each operation.
  */
 public class LadybugDBTemplate {
 
@@ -40,6 +43,14 @@ public class LadybugDBTemplate {
         this.connectionFactory = connectionFactory;
     }
 
+    /**
+     * Execute an operation using a callback function.
+     * The connection is managed automatically based on transaction context.
+     *
+     * @param action the callback to execute
+     * @param <T>    the result type
+     * @return the result of the callback
+     */
     public <T> T execute(LadybugDBCallback<T> action) {
         Connection connection = getConnection();
         boolean isNewConnection = !isConnectionBoundToTransaction();
@@ -52,14 +63,30 @@ public class LadybugDBTemplate {
         }
     }
 
+    /**
+     * Execute a Cypher query without parameters.
+     * 
+     * @param cypher the Cypher query to execute
+     */
     public void execute(String cypher) {
         execute(cypher, Map.of());
     }
 
+    /**
+     * Execute a Cypher query from a Statement object.
+     * 
+     * @param statement the statement to execute
+     */
     public void execute(Statement statement) {
         execute(statement.getCypher(), Map.of());
     }
 
+    /**
+     * Execute a Cypher query with parameters.
+     * 
+     * @param cypher     the Cypher query to execute
+     * @param parameters the query parameters
+     */
     public void execute(String cypher, Map<String, Object> parameters) {
         validateCypherSafety(cypher, parameters);
         execute(connection -> {
@@ -84,10 +111,11 @@ public class LadybugDBTemplate {
      * Executes a query and returns a Stream of results.
      * Memory-efficient for large result sets.
      * 
-     * IMPORTANT: The returned stream must be closed (e.g., using
-     * try-with-resources)
-     * to ensure that underlying database resources (connection, result set) are
-     * released.
+     * @param cypher     the Cypher query to execute
+     * @param parameters the query parameters
+     * @param rowMapper  the row mapper to use
+     * @param <T>        the result type
+     * @return a stream of results
      */
     public <T> Stream<T> stream(String cypher, Map<String, Object> parameters, RowMapper<T> rowMapper) {
         validateCypherSafety(cypher, parameters);
@@ -180,38 +208,102 @@ public class LadybugDBTemplate {
         }
     }
 
+    /**
+     * Execute a query and return a list of results.
+     * 
+     * @param cypher     the Cypher query to execute
+     * @param parameters the query parameters
+     * @param rowMapper  the row mapper to use
+     * @param <T>        the result type
+     * @return a list of results
+     */
     public <T> List<T> query(String cypher, Map<String, Object> parameters, RowMapper<T> rowMapper) {
         try (Stream<T> s = stream(cypher, parameters, rowMapper)) {
             return s.toList();
         }
     }
 
+    /**
+     * Execute a query and return a list of results.
+     * 
+     * @param statement the statement to execute
+     * @param rowMapper the row mapper to use
+     * @param <T>       the result type
+     * @return a list of results
+     */
     public <T> List<T> query(Statement statement, RowMapper<T> rowMapper) {
         return query(statement.getCypher(), Map.of(), rowMapper);
     }
 
+    /**
+     * Execute a query and return a list of results.
+     * 
+     * @param cypher    the Cypher query to execute
+     * @param rowMapper the row mapper to use
+     * @param <T>       the result type
+     * @return a list of results
+     */
     public <T> List<T> query(String cypher, RowMapper<T> rowMapper) {
         return query(cypher, Map.of(), rowMapper);
     }
 
+    /**
+     * Execute a query and return an optional result.
+     * 
+     * @param statement the statement to execute
+     * @param rowMapper the row mapper to use
+     * @param <T>       the result type
+     * @return an optional result
+     */
     public <T> Optional<T> queryForObject(Statement statement, RowMapper<T> rowMapper) {
         return queryForObject(statement.getCypher(), rowMapper);
     }
 
+    /**
+     * Execute a query and return an optional result.
+     * 
+     * @param cypher    the Cypher query to execute
+     * @param rowMapper the row mapper to use
+     * @param <T>       the result type
+     * @return an optional result
+     */
     public <T> Optional<T> queryForObject(String cypher, RowMapper<T> rowMapper) {
         return queryForObject(cypher, Map.of(), rowMapper);
     }
 
+    /**
+     * Execute a query and return an optional result.
+     * 
+     * @param cypher     the Cypher query to execute
+     * @param parameters the query parameters
+     * @param rowMapper  the row mapper to use
+     * @param <T>        the result type
+     * @return an optional result
+     */
     public <T> Optional<T> queryForObject(String cypher, Map<String, Object> parameters, RowMapper<T> rowMapper) {
         try (Stream<T> s = stream(cypher, parameters, rowMapper)) {
             return s.findFirst();
         }
     }
 
+    /**
+     * Execute a query and return a list of strings.
+     * 
+     * @param statement  the statement to execute
+     * @param columnName the column name to return
+     * @return a list of strings
+     */
     public List<String> queryForStringList(Statement statement, String columnName) {
         return queryForStringList(statement.getCypher(), columnName);
     }
 
+    /**
+     * Execute a query and return a list of strings.
+     * 
+     * @param cypher     the Cypher query to execute
+     * @param columnName the column name to return
+     * @return a list of strings
+     */
     public List<String> queryForStringList(String cypher, String columnName) {
         return query(cypher, (row) -> row.getValue(columnName).getValue().toString());
     }
@@ -226,10 +318,6 @@ public class LadybugDBTemplate {
                         cypher);
             }
         }
-    }
-
-    public LadybugDBConnectionFactory getConnectionFactory() {
-        return connectionFactory;
     }
 
     private Connection getConnection() {
