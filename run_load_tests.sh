@@ -4,10 +4,11 @@ set -e
 # Build the project
 echo "Building project..."
 mvn clean package -DskipTests
-JAR_FILE="load-tests/target/load-tests-1.0.0-SNAPSHOT.jar"
+JAR_CANDIDATES=(load-tests/target/load-tests-*.jar)
+JAR_FILE="${JAR_CANDIDATES[0]}"
 
 if [ ! -f "$JAR_FILE" ]; then
-    echo "Error: Jar file $JAR_FILE not found!"
+    echo "Error: Jar file matching load-tests/target/load-tests-*.jar not found!"
     exit 1
 fi
 
@@ -30,7 +31,7 @@ run_scenario() {
     --loadtest.scenario.name="$SCENARIO_NAME" \
     --loadtest.entity-count=$ENTITIES \
     --loadtest.relations-per-entity=$RELATIONS \
-    --loadtest.batch-size=25 || echo "Scenario $SCENARIO_NAME FAILED"
+    --loadtest.batch-size=25 || { status=$?; echo "Scenario $SCENARIO_NAME FAILED with exit code $status"; }
     
     echo ""
 }
