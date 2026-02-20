@@ -19,6 +19,7 @@
         <module>ladybugdb-spring</module>
         <module>core</module>
         <module>mcp</module>
+        <module>jmh</module>
         <module>load-tests</module>
     </modules>
 

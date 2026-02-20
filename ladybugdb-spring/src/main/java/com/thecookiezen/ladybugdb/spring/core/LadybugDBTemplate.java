@@ -1,6 +1,7 @@
 package com.thecookiezen.ladybugdb.spring.core;
 
 import com.ladybugdb.Connection;
+import com.ladybugdb.LbugList;
 import com.ladybugdb.PreparedStatement;
 import com.ladybugdb.QueryResult;
 import com.ladybugdb.Value;
@@ -13,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -79,6 +81,15 @@ public class LadybugDBTemplate {
      */
     public void execute(Statement statement) {
         execute(statement.getCypher(), Map.of());
+    }
+
+    /**
+     * Execute a Cypher query from a Statement object.
+     * 
+     * @param statement the statement to execute
+     */
+    public void execute(Statement statement, Map<String, Object> parameters) {
+        execute(statement.getCypher(), parameters);
     }
 
     /**
@@ -238,6 +249,19 @@ public class LadybugDBTemplate {
     /**
      * Execute a query and return a list of results.
      * 
+     * @param statement  the statement to execute
+     * @param parameters the query parameters
+     * @param rowMapper  the row mapper to use
+     * @param <T>        the result type
+     * @return a list of results
+     */
+    public <T> List<T> query(Statement statement, Map<String, Object> parameters, RowMapper<T> rowMapper) {
+        return query(statement.getCypher(), parameters, rowMapper);
+    }
+
+    /**
+     * Execute a query and return a list of results.
+     * 
      * @param cypher    the Cypher query to execute
      * @param rowMapper the row mapper to use
      * @param <T>       the result type
@@ -257,6 +281,19 @@ public class LadybugDBTemplate {
      */
     public <T> Optional<T> queryForObject(Statement statement, RowMapper<T> rowMapper) {
         return queryForObject(statement.getCypher(), rowMapper);
+    }
+
+    /**
+     * Execute a query and return an optional result.
+     * 
+     * @param statement  the statement to execute
+     * @param parameters the query parameters
+     * @param rowMapper  the row mapper to use
+     * @param <T>        the result type
+     * @return an optional result
+     */
+    public <T> Optional<T> queryForObject(Statement statement, Map<String, Object> parameters, RowMapper<T> rowMapper) {
+        return queryForObject(statement.getCypher(), parameters, rowMapper);
     }
 
     /**
@@ -350,6 +387,14 @@ public class LadybugDBTemplate {
             return Value.createNull();
         if (obj instanceof Value v)
             return v;
+        if (obj instanceof Collection c) {
+            Value[] values = new Value[c.size()];
+            int i = 0;
+            for (Object o : c) {
+                values[i++] = toValue(o);
+            }
+            return new LbugList(values).getValue();
+        }
         return new Value(obj);
     }
 

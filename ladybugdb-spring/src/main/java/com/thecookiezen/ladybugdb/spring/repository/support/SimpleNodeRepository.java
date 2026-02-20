@@ -11,7 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -34,6 +37,13 @@ public class SimpleNodeRepository<T, R, ID> implements NodeRepository<T, ID, R, 
         protected final EntityDescriptor<T> descriptor;
         protected final EntityDescriptor<R> relationshipDescriptor;
 
+        private final String findByIdStatement;
+        private final String saveStatement;
+        private final String deleteStatement;
+        private final String findAllStatement;
+        private final String findAllByIdStatement;
+        private final String countStatement;
+
         public SimpleNodeRepository(LadybugDBTemplate template, Class<T> domainType, Class<R> relationshipType,
                         EntityDescriptor<T> descriptor, EntityDescriptor<R> relationshipDescriptor) {
                 this.template = template;
@@ -43,6 +53,52 @@ public class SimpleNodeRepository<T, R, ID> implements NodeRepository<T, ID, R, 
                 this.descriptor = descriptor;
                 this.relationshipDescriptor = relationshipDescriptor;
                 logger.debug("Created node repository for entity type: {}", domainType.getName());
+
+                Node n = Cypher.node(metadata.getNodeLabel()).named("n");
+                findByIdStatement = Cypher.match(n)
+                                .where(n.property(metadata.getIdPropertyName())
+                                                .isEqualTo(Cypher.parameter("id")))
+                                .returning(n)
+                                .build()
+                                .getCypher();
+
+                Node mergeNode = Cypher.node(metadata.getNodeLabel()).named("n")
+                                .withProperties(metadata.getIdPropertyName(),
+                                                Cypher.parameter(metadata.getIdPropertyName()));
+
+                var setOperations = metadata.getPropertyNames().stream()
+                                .filter(e -> !e.equals(metadata.getIdPropertyName()))
+                                .map(e -> mergeNode.property(e).to(Cypher.parameter(e)))
+                                .toList();
+
+                if (setOperations.isEmpty()) {
+                        saveStatement = Cypher.merge(mergeNode).returning(mergeNode).build()
+                                        .getCypher();
+                } else {
+                        saveStatement = Cypher.merge(mergeNode).set(setOperations).returning(mergeNode).build()
+                                        .getCypher();
+                }
+
+                findAllStatement = Cypher.match(n).returning(n).build()
+                                .getCypher();
+
+                findAllByIdStatement = Cypher.match(n)
+                                .where(n.property(metadata.getIdPropertyName()).in(Cypher.parameter("ids")))
+                                .returning(n)
+                                .build()
+                                .getCypher();
+
+                countStatement = Cypher.match(n)
+                                .returning(Cypher.count(n).as("count"))
+                                .build()
+                                .getCypher();
+
+                deleteStatement = Cypher.match(n)
+                                .where(n.property(metadata.getIdPropertyName())
+                                                .isEqualTo(Cypher.parameter("id")))
+                                .detachDelete(n)
+                                .build()
+                                .getCypher();
         }
 
         @SuppressWarnings("unchecked")
@@ -50,22 +106,11 @@ public class SimpleNodeRepository<T, R, ID> implements NodeRepository<T, ID, R, 
         public <S extends T> S save(S entity) {
                 logger.debug("Saving node entity: {}", entity);
 
-                Node n = Cypher.node(metadata.getNodeLabel()).named("n")
-                                .withProperties(metadata.getIdPropertyName(), Cypher.literalOf(metadata.getId(entity)));
+                Map<String, Object> parameters = new HashMap<>(descriptor.writer().decompose(entity));
+                parameters.put(metadata.getIdPropertyName(), metadata.getId(entity));
 
-                var decomposed = descriptor.writer().decompose(entity);
-
-                var setOperations = decomposed.entrySet().stream()
-                                .map(e -> n.property(e.getKey()).to(Cypher.literalOf(e.getValue())))
-                                .toList();
-
-                Statement statement = Cypher
-                                .merge(n)
-                                .set(setOperations)
-                                .returning(n)
-                                .build();
-
-                return (S) template.queryForObject(statement, descriptor.reader())
+                return (S) template
+                                .queryForObject(saveStatement, parameters, descriptor.reader())
                                 .orElseThrow(() -> new RuntimeException("Failed to save node entity: " + entity));
         }
 
@@ -82,14 +127,7 @@ public class SimpleNodeRepository<T, R, ID> implements NodeRepository<T, ID, R, 
         public Optional<T> findById(ID id) {
                 logger.debug("Finding node by ID: {}", id);
 
-                Node n = Cypher.node(metadata.getNodeLabel()).named("n")
-                                .withProperties(metadata.getIdPropertyName(), Cypher.literalOf(id));
-
-                Statement statement = Cypher.match(n)
-                                .returning(n)
-                                .build();
-
-                return template.queryForObject(statement, descriptor.reader());
+                return template.queryForObject(findByIdStatement, Map.of("id", id), descriptor.reader());
         }
 
         @Override
@@ -100,12 +138,8 @@ public class SimpleNodeRepository<T, R, ID> implements NodeRepository<T, ID, R, 
         @Override
         public Iterable<T> findAll() {
                 logger.debug("Finding all nodes of type: {}", metadata.getNodeLabel());
-                Node n = Cypher.node(metadata.getNodeLabel()).named("n");
-                Statement statement = Cypher.match(n)
-                                .returning(n)
-                                .build();
 
-                return template.query(statement, descriptor.reader());
+                return template.query(findAllStatement, descriptor.reader());
         }
 
         @Override
@@ -115,27 +149,18 @@ public class SimpleNodeRepository<T, R, ID> implements NodeRepository<T, ID, R, 
                 ids.forEach(idList::add);
 
                 if (idList.isEmpty()) {
-                        return List.of();
+                        return Collections.emptyList();
                 }
 
-                Node n = Cypher.node(metadata.getNodeLabel()).named("n");
-                Statement statement = Cypher.match(n)
-                                .where(n.property(metadata.getIdPropertyName()).in(Cypher.literalOf(idList)))
-                                .returning(n)
-                                .build();
-
-                return template.query(statement, descriptor.reader());
+                return template.query(findAllByIdStatement, Map.of("ids", idList), descriptor.reader());
         }
 
         @Override
         public long count() {
                 logger.debug("Counting nodes of type: {}", metadata.getNodeLabel());
-                Node n = Cypher.node(metadata.getNodeLabel()).named("n");
-                Statement statement = Cypher.match(n)
-                                .returning(Cypher.count(n).as("count"))
-                                .build();
 
-                return template.queryForObject(statement, (row) -> (Long) ValueMappers.asLong(row.getValue("count")))
+                return template.queryForObject(countStatement,
+                                (row) -> (Long) ValueMappers.asLong(row.getValue("count")))
                                 .orElseThrow(() -> new RuntimeException(
                                                 "Failed to count nodes of type: " + metadata.getNodeLabel()));
         }
@@ -144,14 +169,7 @@ public class SimpleNodeRepository<T, R, ID> implements NodeRepository<T, ID, R, 
         public void deleteById(ID id) {
                 logger.debug("Deleting node by ID: {}", id);
 
-                Node n = Cypher.node(metadata.getNodeLabel()).named("n")
-                                .withProperties(metadata.getIdPropertyName(), Cypher.literalOf(id));
-
-                Statement statement = Cypher.match(n)
-                                .detachDelete(n)
-                                .build();
-
-                template.execute(statement);
+                template.execute(deleteStatement, Map.of("id", id));
         }
 
         @Override

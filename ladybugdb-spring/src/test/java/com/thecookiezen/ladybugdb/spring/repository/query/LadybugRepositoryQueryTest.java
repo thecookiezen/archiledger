@@ -17,7 +17,6 @@ import com.thecookiezen.ladybugdb.spring.repository.support.LadybugDBRepositoryF
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.repository.query.Param;
@@ -41,20 +40,17 @@ class LadybugRepositoryQueryTest {
         connectionFactory = new SimpleConnectionFactory(db);
         template = new LadybugDBTemplate(connectionFactory);
 
-        try (Connection conn = new Connection(db)) {
-            conn.query("CREATE NODE TABLE Person(name STRING PRIMARY KEY, age INT64)");
-            conn.query("CREATE REL TABLE FOLLOWS(FROM Person TO Person, name STRING, since INT64)");
-        }
-    }
-
-    @BeforeEach
-    void setup() {
         EntityRegistry registry = new EntityRegistry();
         registry.registerDescriptor(Person.class, personReader, personWriter);
         registry.registerDescriptor(Follows.class, followsReader, followsWriter);
 
         LadybugDBRepositoryFactory factory = new LadybugDBRepositoryFactory(template, registry);
         repository = factory.getRepository(TestRepository.class);
+
+        try (Connection conn = new Connection(db)) {
+            conn.query("CREATE NODE TABLE Person(name STRING PRIMARY KEY, age INT64)");
+            conn.query("CREATE REL TABLE FOLLOWS(FROM Person TO Person, name STRING, since INT64)");
+        }
     }
 
     @AfterEach
