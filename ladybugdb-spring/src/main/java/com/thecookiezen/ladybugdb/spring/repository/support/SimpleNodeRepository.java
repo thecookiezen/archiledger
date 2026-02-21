@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Default implementation of {@link NodeRepository}.
@@ -40,9 +41,11 @@ public class SimpleNodeRepository<T, R, ID> implements NodeRepository<T, ID, R, 
         private final String findByIdStatement;
         private final String saveStatement;
         private final String deleteStatement;
+        private final String deleteByIdStatement;
         private final String findAllStatement;
         private final String findAllByIdStatement;
         private final String countStatement;
+        private final String createRelationStatement;
 
         public SimpleNodeRepository(LadybugDBTemplate template, Class<T> domainType, Class<R> relationshipType,
                         EntityDescriptor<T> descriptor, EntityDescriptor<R> relationshipDescriptor) {
@@ -99,6 +102,35 @@ public class SimpleNodeRepository<T, R, ID> implements NodeRepository<T, ID, R, 
                                 .detachDelete(n)
                                 .build()
                                 .getCypher();
+
+                deleteByIdStatement = Cypher.match(n)
+                                .where(n.property(metadata.getIdPropertyName())
+                                                .in(Cypher.parameter("ids")))
+                                .detachDelete(n)
+                                .build()
+                                .getCypher();
+
+                Node s = Cypher.node(metadata.getNodeLabel()).named("s")
+                                .withProperties(metadata.getIdPropertyName(), Cypher.parameter("sourceId"));
+
+                Node t = Cypher.node(metadata.getNodeLabel()).named("t")
+                                .withProperties(metadata.getIdPropertyName(), Cypher.parameter("targetId"));
+
+                var rel = s.relationshipTo(t, relationshipMetadata.getRelationshipTypeName()).named("rel");
+
+                var ops = relationshipMetadata.getPropertyNames().stream()
+                                .filter(propertyName -> !propertyName.equals(relationshipMetadata.getSourceFieldName())
+                                                && !propertyName.equals(relationshipMetadata.getTargetFieldName()))
+                                .map(propertyName -> rel.property(propertyName).to(Cypher.parameter(propertyName)))
+                                .toList();
+
+                var matchMerge = Cypher.match(s, t).merge(rel);
+
+                if (!ops.isEmpty()) {
+                        createRelationStatement = matchMerge.set(ops).returning(s, t, rel).build().getCypher();
+                } else {
+                        createRelationStatement = matchMerge.returning(s, t, rel).build().getCypher();
+                }
         }
 
         @SuppressWarnings("unchecked")
@@ -188,13 +220,7 @@ public class SimpleNodeRepository<T, R, ID> implements NodeRepository<T, ID, R, 
                         return;
                 }
 
-                Node n = Cypher.node(metadata.getNodeLabel()).named("n");
-                Statement statement = Cypher.match(n)
-                                .where(n.property(metadata.getIdPropertyName()).in(Cypher.literalOf(idList)))
-                                .detachDelete(n)
-                                .build();
-
-                template.execute(statement);
+                template.execute(deleteByIdStatement, Map.of("ids", idList));
         }
 
         @Override
@@ -237,30 +263,15 @@ public class SimpleNodeRepository<T, R, ID> implements NodeRepository<T, ID, R, 
         public R createRelation(T source, T target, R relationship) {
                 logger.debug("Creating relationship: {} -> {}", source, target);
 
-                Node s = Cypher.node(metadata.getNodeLabel()).named("s")
-                                .withProperties(metadata.getIdPropertyName(), Cypher.literalOf(metadata.getId(source)));
-
-                Node t = Cypher.node(metadata.getNodeLabel()).named("t")
-                                .withProperties(metadata.getIdPropertyName(), Cypher.literalOf(metadata.getId(target)));
-
-                var rel = s.relationshipTo(t, relationshipMetadata.getRelationshipTypeName()).named("rel");
-
-                var setOperations = relationshipDescriptor.writer().decompose(relationship).entrySet().stream()
+                var params = relationshipDescriptor.writer().decompose(relationship).entrySet().stream()
                                 .filter(e -> !e.getKey().equals(relationshipMetadata.getSourceFieldName())
                                                 && !e.getKey().equals(relationshipMetadata.getTargetFieldName()))
-                                .map(e -> rel.property(e.getKey()).to(Cypher.literalOf(e.getValue())))
-                                .toList();
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-                var matchMerge = Cypher.match(s, t).merge(rel);
+                params.put("sourceId", metadata.getId(source));
+                params.put("targetId", metadata.getId(target));
 
-                Statement statement;
-                if (!setOperations.isEmpty()) {
-                        statement = matchMerge.set(setOperations).returning(s, t, rel).build();
-                } else {
-                        statement = matchMerge.returning(s, t, rel).build();
-                }
-
-                return template.queryForObject(statement, relationshipDescriptor.reader())
+                return template.queryForObject(createRelationStatement, params, relationshipDescriptor.reader())
                                 .orElseThrow(() -> new RuntimeException(
                                                 "Failed to create relationship: " + relationship));
         }

@@ -4,6 +4,8 @@ import com.thecookiezen.ladybugdb.spring.annotation.RelationshipEntity;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Metadata about a relationship entity type, including type name
@@ -21,6 +23,7 @@ public class RelationshipMetadata<R> {
     private final String targetFieldName;
     private final Field idField;
     private final String idPropertyName;
+    private final List<String> propertyNames;
 
     public RelationshipMetadata(Class<R> relationshipType) {
         this.relationshipType = relationshipType;
@@ -37,6 +40,13 @@ public class RelationshipMetadata<R> {
         this.targetFieldName = annotation.targetField();
         this.idField = findIdField(relationshipType);
         this.idPropertyName = idField != null ? idField.getName() : "id";
+        this.propertyNames = extractPropertyNames(relationshipType);
+    }
+
+    private List<String> extractPropertyNames(Class<R> relationshipType) {
+        return Arrays.stream(relationshipType.getDeclaredFields())
+                .map(Field::getName)
+                .toList();
     }
 
     private Field findIdField(Class<R> relationshipType) {
@@ -93,6 +103,10 @@ public class RelationshipMetadata<R> {
 
     public String getIdPropertyName() {
         return idPropertyName;
+    }
+
+    public List<String> getPropertyNames() {
+        return propertyNames;
     }
 
     @SuppressWarnings("unchecked")

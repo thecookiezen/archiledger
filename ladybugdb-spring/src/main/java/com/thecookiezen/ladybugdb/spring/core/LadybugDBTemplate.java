@@ -377,7 +377,7 @@ public class LadybugDBTemplate {
         if (parameters == null || parameters.isEmpty()) {
             return Collections.emptyMap();
         }
-        Map<String, Value> converted = new HashMap<>();
+        Map<String, Value> converted = new HashMap<>(parameters.size());
         parameters.forEach((key, value) -> converted.put(key, toValue(value)));
         return converted;
     }

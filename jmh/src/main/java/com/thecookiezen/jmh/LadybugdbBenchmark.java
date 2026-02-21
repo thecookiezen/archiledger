@@ -105,6 +105,7 @@ public class LadybugdbBenchmark {
         String fromId = "User" + (idGenerator.get() % 500);
         String toId = "User" + ((idGenerator.get() % 500) + 500);
         Follows follows = new Follows();
+        follows.name = "Follows" + idGenerator.get();
         follows.since = (int) (Math.random() * 100);
         repository.createRelation(new Person(fromId, 0), new Person(toId, 0), follows);
     }
@@ -160,6 +161,6 @@ public class LadybugdbBenchmark {
         }
     }
 
-    static EntityWriter<Follows> followsWriter = (entity) -> Map.of("since", entity.since);
+    static EntityWriter<Follows> followsWriter = (entity) -> Map.of("name", entity.name, "since", entity.since);
     static RowMapper<Follows> followsReader = (row) -> new Follows();
 }
