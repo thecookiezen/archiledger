@@ -12,7 +12,7 @@
     <description>Core domain and persistence logic</description>
 
     <properties>
-        <spring.neo4j.version>4.0.2</spring.neo4j.version>
+        <spring.neo4j.version>4.0.3</spring.neo4j.version>
     </properties>
 
     <dependencies>
