@@ -71,7 +71,12 @@ public final class DefaultQueryRow implements QueryRow {
                     "Column '" + column + "' is not a NODE (type: " + value.getDataType().getID() + ")");
         }
         try (LbugStruct struct = new LbugStruct(value)) {
-            return struct.toMap();
+            int numFields = Long.valueOf(struct.getNumFields()).intValue();
+            Map<String, Value> ret = new HashMap<>(numFields);
+            for (int i = 0; i < numFields; ++i) {
+                ret.put(struct.getFieldNameByIndex((long) i), struct.getValueByIndex((long) i));
+            }
+            return ret;
         }
     }
 
