@@ -71,16 +71,28 @@ public class LadybugDBConfig {
 
     private void initializeSchema(Database db) {
         try (Connection conn = new Connection(db)) {
-            conn.query(
-                    "CREATE NODE TABLE IF NOT EXISTS Entity(name STRING PRIMARY KEY, type STRING, observations STRING[])");
-            conn.query("CREATE REL TABLE IF NOT EXISTS RELATED_TO(FROM Entity TO Entity, relationType STRING)");
-            logger.info("LadybugDB schema initialized");
+            try (var r1 = conn.query(
+                    "CREATE NODE TABLE IF NOT EXISTS Entity(name STRING PRIMARY KEY, type STRING, observations STRING[])")) {
+                if (!r1.isSuccess()) {
+                    throw new RuntimeException("Failed to create Entity table: " + r1.getErrorMessage());
+                }
+                logger.info("Entity node table ready");
+            }
+            try (var r2 = conn.query(
+                    "CREATE REL TABLE IF NOT EXISTS RELATED_TO(FROM Entity TO Entity, relationType STRING)")) {
+                if (!r2.isSuccess()) {
+                    throw new RuntimeException("Failed to create RELATED_TO table: " + r2.getErrorMessage());
+                }
+                logger.info("RELATED_TO relationship table ready");
+            }
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
-            logger.warn("Schema initialization encountered an issue: {}", e.getMessage());
+            throw new RuntimeException("Schema initialization failed", e);
         }
     }
 
-    @Bean
+    @Bean(destroyMethod = "close")
     public LadybugDBConnectionFactory connectionFactory(Database database) {
         return new PooledConnectionFactory(database);
     }
