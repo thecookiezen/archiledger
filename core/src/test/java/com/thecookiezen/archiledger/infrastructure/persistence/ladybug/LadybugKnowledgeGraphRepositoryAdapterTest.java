@@ -1,18 +1,21 @@
-package com.thecookiezen.archiledger.infrastructure.persistence.neo4j;
+package com.thecookiezen.archiledger.infrastructure.persistence.ladybug;
 
 import com.thecookiezen.archiledger.domain.model.Entity;
 import com.thecookiezen.archiledger.domain.model.EntityId;
 import com.thecookiezen.archiledger.domain.model.EntityType;
 import com.thecookiezen.archiledger.domain.model.Relation;
 import com.thecookiezen.archiledger.domain.model.RelationType;
+import com.thecookiezen.archiledger.infrastructure.config.LadybugDBConfig;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.LadybugDbRepository;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.LadybugKnowledgeGraphRepository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 import java.util.Map;
@@ -21,13 +24,16 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = LadybugKnowledgeGraphRepositoryAdapterTest.TestConfig.class)
 @ActiveProfiles("ladybugdb")
 class LadybugKnowledgeGraphRepositoryAdapterTest {
 
-    @org.springframework.boot.SpringBootConfiguration
-    @org.springframework.boot.autoconfigure.EnableAutoConfiguration
-    @org.springframework.context.annotation.ComponentScan(basePackages = "com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb")
+    @org.springframework.context.annotation.Configuration
+    @org.springframework.context.annotation.Import(LadybugDBConfig.class)
+    @org.springframework.context.annotation.ComponentScan(basePackages = {
+            "com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb"
+    })
     static class TestConfig {
     }
 

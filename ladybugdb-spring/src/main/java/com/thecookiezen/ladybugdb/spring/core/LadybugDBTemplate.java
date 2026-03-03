@@ -388,6 +388,9 @@ public class LadybugDBTemplate {
         if (obj instanceof Value v)
             return v;
         if (obj instanceof Collection c) {
+            if (c.isEmpty()) {
+                return Value.createNull();
+            }
             Value[] values = new Value[c.size()];
             int i = 0;
             for (Object o : c) {

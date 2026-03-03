@@ -2,6 +2,7 @@ package com.thecookiezen.ladybugdb.spring.config;
 
 import com.thecookiezen.ladybugdb.spring.repository.support.LadybugDBRepositoryFactoryBean;
 
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 
@@ -18,7 +19,7 @@ import java.lang.annotation.Target;
  * repositories by default.
  * <p>
  * Example usage:
- * 
+ *
  * <pre>
  * {@literal @}Configuration
  * {@literal @}EnableLadybugDBRepositories(basePackages = "com.example.repositories")
@@ -56,12 +57,12 @@ public @interface EnableLadybugDBRepositories {
     /**
      * Specifies which types are eligible for component scanning.
      */
-    Class<?>[] includeFilters() default {};
+    ComponentScan.Filter[] includeFilters() default {};
 
     /**
      * Specifies which types are not eligible for component scanning.
      */
-    Class<?>[] excludeFilters() default {};
+    ComponentScan.Filter[] excludeFilters() default {};
 
     /**
      * Returns the postfix to be used when looking up custom repository
@@ -72,8 +73,7 @@ public @interface EnableLadybugDBRepositories {
 
     /**
      * Returns the {@link org.springframework.beans.factory.FactoryBean} class to be
-     * used
-     * for each repository instance.
+     * used for each repository instance.
      */
     Class<?> repositoryFactoryBeanClass() default LadybugDBRepositoryFactoryBean.class;
 
@@ -93,4 +93,10 @@ public @interface EnableLadybugDBRepositories {
      * Configures the lookup strategy for query methods.
      */
     QueryLookupStrategy.Key queryLookupStrategy() default QueryLookupStrategy.Key.CREATE_IF_NOT_FOUND;
+
+    /**
+     * Configures the location of where to find the Spring Data named queries
+     * properties file.
+     */
+    String namedQueriesLocation() default "";
 }

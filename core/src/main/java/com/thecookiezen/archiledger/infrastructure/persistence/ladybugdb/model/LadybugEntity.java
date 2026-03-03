@@ -5,6 +5,9 @@ import java.util.List;
 
 import org.springframework.data.annotation.Id;
 
+import com.thecookiezen.ladybugdb.spring.annotation.NodeEntity;
+
+@NodeEntity(label = "Entity")
 public class LadybugEntity {
     @Id
     private String name;
@@ -12,8 +15,6 @@ public class LadybugEntity {
     private String type;
 
     private List<String> observations = new ArrayList<>();
-
-    private List<LadybugRelation> relations = new ArrayList<>();
 
     public LadybugEntity() {
     }
@@ -45,13 +46,5 @@ public class LadybugEntity {
 
     public void setObservations(List<String> observations) {
         this.observations = observations;
-    }
-
-    public List<LadybugRelation> getRelations() {
-        return relations;
-    }
-
-    public void setRelations(List<LadybugRelation> relations) {
-        this.relations = relations;
     }
 }

@@ -8,17 +8,16 @@ import com.thecookiezen.archiledger.domain.model.RelationType;
 import com.thecookiezen.archiledger.domain.repository.KnowledgeGraphRepository;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.LadybugEntity;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.LadybugRelation;
+import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.RelationProjection;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 @Repository
@@ -49,13 +48,13 @@ public class LadybugKnowledgeGraphRepository implements KnowledgeGraphRepository
         LadybugEntity to = ladybugDbRepository.findById(relation.to().value())
                 .orElseGet(() -> ladybugDbRepository.save(new LadybugEntity(relation.to().value(), "unknown")));
 
-        boolean exists = from.getRelations().stream()
+        boolean exists = ladybugDbRepository.findRelationsBySource(from).stream()
                 .anyMatch(r -> r.getTargetEntity().getName().equals(to.getName())
                         && r.getRelationType().equals(relation.relationType().value()));
 
         if (!exists) {
-            from.getRelations().add(new LadybugRelation(to, relation.relationType().value()));
-            ladybugDbRepository.save(from);
+            LadybugRelation ladybugRelation = new LadybugRelation(from, to, relation.relationType().value());
+            ladybugDbRepository.createRelation(from, to, ladybugRelation);
         }
     }
 
@@ -68,16 +67,9 @@ public class LadybugKnowledgeGraphRepository implements KnowledgeGraphRepository
 
     @Override
     public List<Relation> findAllRelations() {
-        List<Relation> relations = new ArrayList<>();
-        List<LadybugEntity> all = ladybugDbRepository.findAll();
-        for (LadybugEntity n : all) {
-            if (n.getRelations() != null) {
-                for (LadybugRelation rc : n.getRelations()) {
-                    relations.add(new Relation(n.getName(), rc.getTargetEntity().getName(), rc.getRelationType()));
-                }
-            }
-        }
-        return relations;
+        return ladybugDbRepository.findAllRelations().stream()
+                .map(this::mapLadybugRelationToDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -95,9 +87,14 @@ public class LadybugKnowledgeGraphRepository implements KnowledgeGraphRepository
     @Override
     public void deleteRelation(Relation relation) {
         ladybugDbRepository.findById(relation.from().value()).ifPresent(from -> {
-            from.getRelations().removeIf(r -> r.getTargetEntity().getName().equals(relation.to().value()) &&
-                    r.getRelationType().equals(relation.relationType().value()));
-            ladybugDbRepository.save(from);
+            List<LadybugRelation> matching = ladybugDbRepository.findRelationsBySource(from).stream()
+                    .filter(r -> r.getTargetEntity().getName().equals(relation.to().value())
+                            && r.getRelationType().equals(relation.relationType().value()))
+                    .collect(Collectors.toList());
+
+            for (LadybugRelation r : matching) {
+                ladybugDbRepository.deleteRelation(r);
+            }
         });
     }
 
@@ -116,14 +113,14 @@ public class LadybugKnowledgeGraphRepository implements KnowledgeGraphRepository
     @Override
     public List<Relation> findRelationsForEntity(EntityId entityId) {
         return ladybugDbRepository.findRelationsForEntity(entityId.value()).stream()
-                .map(this::mapToRelation)
+                .map(this::mapProjectionToRelation)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<Relation> findRelationsByType(RelationType type) {
         return ladybugDbRepository.findRelationsByRelationType(type.value()).stream()
-                .map(this::mapToRelation)
+                .map(this::mapProjectionToRelation)
                 .collect(Collectors.toList());
     }
 
@@ -154,9 +151,15 @@ public class LadybugKnowledgeGraphRepository implements KnowledgeGraphRepository
         return new Entity(ladybugEntity.getName(), ladybugEntity.getType(), ladybugEntity.getObservations());
     }
 
-    private Relation mapToRelation(LadybugRelation ladybugRelation) {
-        return new Relation(ladybugRelation.getFromName(), ladybugRelation.getToName(),
-                ladybugRelation.getRelationType());
+    private Relation mapProjectionToRelation(RelationProjection projection) {
+        return new Relation(projection.fromName(), projection.toName(),
+                projection.relationType());
     }
 
+    private Relation mapLadybugRelationToDomain(LadybugRelation ladybugRelation) {
+        return new Relation(
+                ladybugRelation.getSourceEntity().getName(),
+                ladybugRelation.getTargetEntity().getName(),
+                ladybugRelation.getRelationType());
+    }
 }

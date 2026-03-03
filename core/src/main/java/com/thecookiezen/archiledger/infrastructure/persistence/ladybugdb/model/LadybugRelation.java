@@ -1,7 +1,15 @@
 package com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model;
 
+import org.springframework.data.annotation.Id;
+
+import com.thecookiezen.ladybugdb.spring.annotation.RelationshipEntity;
+
+@RelationshipEntity(type = "RELATED_TO", nodeType = LadybugEntity.class, sourceField = "sourceEntity", targetField = "targetEntity")
 public class LadybugRelation {
+    @Id
     private String id;
+
+    private LadybugEntity sourceEntity;
 
     private LadybugEntity targetEntity;
 
@@ -10,7 +18,8 @@ public class LadybugRelation {
     public LadybugRelation() {
     }
 
-    public LadybugRelation(LadybugEntity targetEntity, String relationType) {
+    public LadybugRelation(LadybugEntity sourceEntity, LadybugEntity targetEntity, String relationType) {
+        this.sourceEntity = sourceEntity;
         this.targetEntity = targetEntity;
         this.relationType = relationType;
     }
@@ -21,6 +30,14 @@ public class LadybugRelation {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public LadybugEntity getSourceEntity() {
+        return sourceEntity;
+    }
+
+    public void setSourceEntity(LadybugEntity sourceEntity) {
+        this.sourceEntity = sourceEntity;
     }
 
     public LadybugEntity getTargetEntity() {

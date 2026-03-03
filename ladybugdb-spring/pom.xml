@@ -15,7 +15,7 @@
         <dependency>
             <groupId>com.ladybugdb</groupId>
             <artifactId>lbug</artifactId>
-            <version>0.14.1</version>
+            <version>0.15.1</version>
         </dependency>
         <dependency>
             <groupId>org.neo4j</groupId>
