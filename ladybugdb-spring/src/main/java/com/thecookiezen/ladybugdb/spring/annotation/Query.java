@@ -23,4 +23,9 @@ public @interface Query {
      * Whether the query is a "delete" or "update" operation.
      */
     boolean modifying() default false;
+
+    /**
+     * Extensions to load before executing the query.
+     */
+    String[] loadExtensions() default {};
 }

@@ -129,6 +129,22 @@ public class LadybugDBTemplate {
      * @return a stream of results
      */
     public <T> Stream<T> stream(String cypher, Map<String, Object> parameters, RowMapper<T> rowMapper) {
+        return stream(null, cypher, parameters, rowMapper);
+    }
+
+    /**
+     * Executes a query and returns a Stream of results, loading extensions first.
+     * Memory-efficient for large result sets.
+     * 
+     * @param extensions extensions to load before the query
+     * @param cypher     the Cypher query to execute
+     * @param parameters the query parameters
+     * @param rowMapper  the row mapper to use
+     * @param <T>        the result type
+     * @return a stream of results
+     */
+    public <T> Stream<T> stream(String[] extensions, String cypher, Map<String, Object> parameters,
+            RowMapper<T> rowMapper) {
         validateCypherSafety(cypher, parameters);
 
         Connection connection = null;
@@ -140,6 +156,16 @@ public class LadybugDBTemplate {
         try {
             connection = getConnection();
             isNewConnection = !isConnectionBoundToTransaction();
+
+            if (extensions != null && extensions.length > 0) {
+                for (String ext : extensions) {
+                    try (var res = connection.query("LOAD " + ext)) {
+                        if (!res.isSuccess()) {
+                            logger.warn("Failed to load extension '{}': {}", ext, res.getErrorMessage());
+                        }
+                    }
+                }
+            }
 
             valueParameters = convertParameters(parameters);
             statement = connection.prepare(cypher);
@@ -229,7 +255,22 @@ public class LadybugDBTemplate {
      * @return a list of results
      */
     public <T> List<T> query(String cypher, Map<String, Object> parameters, RowMapper<T> rowMapper) {
-        try (Stream<T> s = stream(cypher, parameters, rowMapper)) {
+        return query(null, cypher, parameters, rowMapper);
+    }
+
+    /**
+     * Execute a query and return a list of results, loading extensions first.
+     * 
+     * @param extensions extensions to load before query
+     * @param cypher     the Cypher query to execute
+     * @param parameters the query parameters
+     * @param rowMapper  the row mapper to use
+     * @param <T>        the result type
+     * @return a list of results
+     */
+    public <T> List<T> query(String[] extensions, String cypher, Map<String, Object> parameters,
+            RowMapper<T> rowMapper) {
+        try (Stream<T> s = stream(extensions, cypher, parameters, rowMapper)) {
             return s.toList();
         }
     }
@@ -396,7 +437,9 @@ public class LadybugDBTemplate {
             for (Object o : c) {
                 values[i++] = toValue(o);
             }
-            return new LbugList(values).getValue();
+            try (var lbugList = new LbugList(values)) {
+                return lbugList.getValue();
+            }
         }
         return new Value(obj);
     }

@@ -30,4 +30,12 @@ public class LadybugQueryMethod extends QueryMethod {
         }
         return null;
     }
+
+    public String[] getLoadExtensions() {
+        Query query = AnnotationUtils.findAnnotation(method, Query.class);
+        if (query != null && query.loadExtensions().length > 0) {
+            return query.loadExtensions();
+        }
+        return new String[0];
+    }
 }

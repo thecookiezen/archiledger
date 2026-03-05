@@ -136,4 +136,28 @@ public final class ValueMappers {
     public static List<Boolean> asBooleanList(Value value) {
         return asList(value, ValueMappers::asBoolean);
     }
+
+    public static float[] asFloatArray(Value value) {
+        if (value == null || value.isNull()) {
+            return null;
+        }
+
+        try (LbugList lbugList = new LbugList(value)) {
+            long size = lbugList.getListSize();
+            float[] result = new float[(int) size];
+
+            for (long i = 0; i < size; i++) {
+                try (Value element = lbugList.getListElement(i)) {
+                    Object raw = element.getValue();
+                    if (raw instanceof Number n) {
+                        result[(int) i] = n.floatValue();
+                    } else {
+                        result[(int) i] = Float.parseFloat(raw.toString());
+                    }
+                }
+            }
+
+            return result;
+        }
+    }
 }

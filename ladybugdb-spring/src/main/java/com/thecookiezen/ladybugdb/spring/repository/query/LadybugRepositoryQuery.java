@@ -44,7 +44,8 @@ public class LadybugRepositoryQuery implements RepositoryQuery {
         RowMapper<?> mapper = getRowMapper(domainType);
 
         @SuppressWarnings("unchecked")
-        List<?> results = template.query(queryString, params, (RowMapper<Object>) mapper);
+        List<?> results = template.query(queryMethod.getLoadExtensions(), queryString, params,
+                (RowMapper<Object>) mapper);
 
         if (queryMethod.isCollectionQuery()) {
             return results;
