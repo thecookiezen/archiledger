@@ -31,4 +31,8 @@ public interface MemoryNoteDbRepository
 
     @Query("MATCH (source:MemoryNote)-[r:LINKED_TO]->(target:MemoryNote) RETURN source.id AS fromId, target.id AS toId, r.relationType AS relationType")
     List<LinkProjection> findAllLinks();
+
+    @Query(value = "CALL QUERY_VECTOR_INDEX('MemoryNote', 'memory_note_embedding_idx', $queryVector, $limit) RETURN node.id AS id, distance ORDER BY distance", loadExtensions = {
+            "vector" })
+    List<String> findSimilarRaw(float[] queryVector, long limit);
 }

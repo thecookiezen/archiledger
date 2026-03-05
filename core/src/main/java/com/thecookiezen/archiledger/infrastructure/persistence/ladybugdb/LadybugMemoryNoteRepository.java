@@ -7,7 +7,6 @@ import com.thecookiezen.archiledger.domain.repository.MemoryNoteRepository;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.LadybugMemoryNote;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.LadybugNoteLink;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.LinkProjection;
-
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
@@ -40,6 +39,7 @@ public class LadybugMemoryNoteRepository implements MemoryNoteRepository {
         ladybugNote.setTags(note.tags());
         ladybugNote.setTimestamp(note.timestamp());
         ladybugNote.setRetrievalCount(note.retrievalCount());
+        ladybugNote.setEmbedding(note.embedding());
 
         LadybugMemoryNote saved = dbRepository.save(ladybugNote);
 
@@ -145,6 +145,13 @@ public class LadybugMemoryNoteRepository implements MemoryNoteRepository {
         });
     }
 
+    @Override
+    public List<MemoryNoteId> findSimilar(float[] queryEmbedding, int topK) {
+        return dbRepository.findSimilarRaw(queryEmbedding, topK).stream()
+                .map(MemoryNoteId::new)
+                .collect(Collectors.toList());
+    }
+
     private MemoryNote toDomainNote(LadybugMemoryNote note) {
         return new MemoryNote(
                 new MemoryNoteId(note.getId()),
@@ -154,7 +161,8 @@ public class LadybugMemoryNoteRepository implements MemoryNoteRepository {
                 note.getTags(),
                 List.of(),
                 note.getTimestamp(),
-                note.getRetrievalCount());
+                note.getRetrievalCount(),
+                note.getEmbedding());
     }
 
     private MemoryNote toDomainNoteWithLinks(LadybugMemoryNote note, String noteId) {
@@ -169,7 +177,8 @@ public class LadybugMemoryNoteRepository implements MemoryNoteRepository {
                 note.getTags(),
                 links,
                 note.getTimestamp(),
-                note.getRetrievalCount());
+                note.getRetrievalCount(),
+                note.getEmbedding());
     }
 
     private NoteLink toDomainLink(LinkProjection projection) {

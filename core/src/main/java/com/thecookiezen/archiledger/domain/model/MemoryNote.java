@@ -10,7 +10,8 @@ public record MemoryNote(
         List<String> tags,
         List<NoteLink> links,
         String timestamp,
-        int retrievalCount) {
+        int retrievalCount,
+        float[] embedding) {
 
     public MemoryNote {
         if (id == null) {
@@ -31,10 +32,14 @@ public record MemoryNote(
     }
 
     public MemoryNote withRetrievalCount(int newCount) {
-        return new MemoryNote(id, content, keywords, context, tags, links, timestamp, newCount);
+        return new MemoryNote(id, content, keywords, context, tags, links, timestamp, newCount, embedding);
     }
 
     public MemoryNote withLinks(List<NoteLink> newLinks) {
-        return new MemoryNote(id, content, keywords, context, tags, newLinks, timestamp, retrievalCount);
+        return new MemoryNote(id, content, keywords, context, tags, newLinks, timestamp, retrievalCount, embedding);
+    }
+
+    public MemoryNote withEmbedding(float[] embedding) {
+        return new MemoryNote(id, content, keywords, context, tags, links, timestamp, retrievalCount, embedding);
     }
 }

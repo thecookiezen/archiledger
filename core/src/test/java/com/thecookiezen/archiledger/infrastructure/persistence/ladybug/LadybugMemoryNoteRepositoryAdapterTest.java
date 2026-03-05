@@ -55,7 +55,8 @@ class LadybugMemoryNoteRepositoryAdapterTest {
                 tags,
                 List.of(),
                 "2026-03-04T16:00:00Z",
-                0);
+                0,
+                null);
     }
 
     @Test

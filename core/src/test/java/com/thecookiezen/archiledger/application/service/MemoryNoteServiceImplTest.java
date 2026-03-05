@@ -40,27 +40,32 @@ class MemoryNoteServiceImplTest {
                 List.of("tag1"),
                 List.of(),
                 "2026-03-04T16:00:00Z",
-                0);
+                0,
+                null);
     }
 
     @Test
     void createNote_savesAndGeneratesEmbeddings() {
         MemoryNote note = sampleNote("note-1");
-        when(repository.save(any(MemoryNote.class))).thenReturn(note);
+        float[] embedding = new float[] { 0.1f, 0.2f, 0.3f };
+        MemoryNote noteWithEmbedding = note.withEmbedding(embedding);
+        when(embeddingsService.generateEmbeddings(note)).thenReturn(embedding);
+        when(repository.save(noteWithEmbedding)).thenReturn(noteWithEmbedding);
 
         MemoryNote result = service.createNote(note);
 
         assertEquals("note-1", result.id().value());
-        verify(repository).save(note);
         verify(embeddingsService).generateEmbeddings(note);
+        verify(repository).save(noteWithEmbedding);
     }
 
     @Test
     void createNotes_savesMultiple() {
         MemoryNote note1 = sampleNote("note-1");
         MemoryNote note2 = sampleNote("note-2");
-        when(repository.save(note1)).thenReturn(note1);
-        when(repository.save(note2)).thenReturn(note2);
+        when(embeddingsService.generateEmbeddings(note1)).thenReturn(new float[] { 0.1f });
+        when(embeddingsService.generateEmbeddings(note2)).thenReturn(new float[] { 0.2f });
+        when(repository.save(any(MemoryNote.class))).thenAnswer(inv -> inv.getArgument(0));
 
         List<MemoryNote> result = service.createNotes(List.of(note1, note2));
 
@@ -87,14 +92,6 @@ class MemoryNoteServiceImplTest {
 
         assertTrue(result.isEmpty());
         verify(repository, never()).incrementRetrievalCount(any());
-    }
-
-    @Test
-    void deleteNote_delegatesAndDeletesEmbeddings() {
-        service.deleteNote(new MemoryNoteId("note-1"));
-
-        verify(repository).delete(new MemoryNoteId("note-1"));
-        verify(embeddingsService).deleteEmbeddings(List.of("note-1"));
     }
 
     @Test
@@ -161,12 +158,19 @@ class MemoryNoteServiceImplTest {
     }
 
     @Test
-    void similaritySearch_delegatesToEmbeddingsService() {
-        when(embeddingsService.findClosestMatch("architecture")).thenReturn(List.of("result1"));
+    void similaritySearch_embedsQueryAndDelegatesToRepository() {
+        float[] queryEmbedding = new float[] { 0.1f, 0.2f, 0.3f };
+        MemoryNoteId matchId = new MemoryNoteId("match-1");
+        MemoryNote matchedNote = sampleNote("match-1");
+        when(embeddingsService.embed("architecture")).thenReturn(queryEmbedding);
+        when(repository.findSimilar(queryEmbedding, 10)).thenReturn(List.of(matchId));
+        when(repository.findById(matchId)).thenReturn(Optional.of(matchedNote));
 
         List<String> results = service.similaritySearch("architecture");
 
         assertEquals(1, results.size());
-        verify(embeddingsService).findClosestMatch("architecture");
+        assertEquals("Sample content for match-1", results.get(0));
+        verify(embeddingsService).embed("architecture");
+        verify(repository).findSimilar(queryEmbedding, 10);
     }
 }

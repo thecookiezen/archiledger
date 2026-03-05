@@ -74,7 +74,7 @@ public class LadybugDBConfig {
     private void initializeSchema(Database db) {
         try (Connection conn = new Connection(db)) {
             try (var r1 = conn.query(
-                    "CREATE NODE TABLE IF NOT EXISTS MemoryNote(id STRING PRIMARY KEY, content STRING, keywords STRING[], context STRING, tags STRING[], timestamp STRING, retrievalCount INT64)")) {
+                    "CREATE NODE TABLE IF NOT EXISTS MemoryNote(id STRING PRIMARY KEY, content STRING, keywords STRING[], context STRING, tags STRING[], timestamp STRING, retrievalCount INT64, embedding FLOAT[384])")) {
                 if (!r1.isSuccess()) {
                     throw new RuntimeException("Failed to create MemoryNote table: " + r1.getErrorMessage());
                 }
@@ -130,6 +130,7 @@ public class LadybugDBConfig {
             note.setTimestamp(ValueMappers.asString(node.get("timestamp")));
             Integer retrievalCount = ValueMappers.asInteger(node.get("retrievalCount"));
             note.setRetrievalCount(retrievalCount != null ? retrievalCount : 0);
+            note.setEmbedding(ValueMappers.asFloatArray(node.get("embedding")));
             return note;
         };
     }
@@ -143,6 +144,7 @@ public class LadybugDBConfig {
             props.put("tags", note.getTags());
             props.put("timestamp", note.getTimestamp());
             props.put("retrievalCount", note.getRetrievalCount());
+            props.put("embedding", note.getEmbedding());
             return props;
         };
     }

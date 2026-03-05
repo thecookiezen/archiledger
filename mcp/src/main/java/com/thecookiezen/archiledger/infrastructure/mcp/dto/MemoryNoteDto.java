@@ -43,7 +43,8 @@ public record MemoryNoteDto(
                 tags,
                 links.stream().map(NoteLinkDto::toDomain).toList(),
                 timestamp,
-                retrievalCount);
+                retrievalCount,
+                null);
     }
 
     public static MemoryNoteDto fromDomain(MemoryNote note) {

@@ -24,6 +24,8 @@ public class LadybugMemoryNote {
 
     private int retrievalCount;
 
+    private float[] embedding;
+
     public LadybugMemoryNote() {
     }
 
@@ -92,5 +94,13 @@ public class LadybugMemoryNote {
 
     public void setRetrievalCount(int retrievalCount) {
         this.retrievalCount = retrievalCount;
+    }
+
+    public float[] getEmbedding() {
+        return embedding;
+    }
+
+    public void setEmbedding(float[] embedding) {
+        this.embedding = embedding;
     }
 }

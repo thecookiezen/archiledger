@@ -69,7 +69,8 @@ class DomainModelValidationTest {
                     List.of("design", "backend"),
                     List.of(new NoteLink("note-2", "RELATED_TO")),
                     "2026-03-04T16:00:00Z",
-                    0);
+                    0,
+                    null);
 
             assertEquals("note-1", note.id().value());
             assertEquals("Some knowledge content", note.content());
@@ -88,7 +89,8 @@ class DomainModelValidationTest {
                     "content",
                     null, null, null, null,
                     "2026-03-04T16:00:00Z",
-                    0);
+                    0,
+                    null);
 
             assertNotNull(note.keywords());
             assertTrue(note.keywords().isEmpty());
@@ -102,28 +104,28 @@ class DomainModelValidationTest {
         void shouldThrowExceptionWhenIdIsNull() {
             assertThrows(IllegalArgumentException.class,
                     () -> new MemoryNote(null, "content", List.of(), null, List.of(), List.of(),
-                            "2026-03-04T16:00:00Z", 0));
+                            "2026-03-04T16:00:00Z", 0, null));
         }
 
         @Test
         void shouldThrowExceptionWhenContentIsNull() {
             assertThrows(IllegalArgumentException.class,
                     () -> new MemoryNote(new MemoryNoteId("id"), null, List.of(), null, List.of(), List.of(),
-                            "2026-03-04T16:00:00Z", 0));
+                            "2026-03-04T16:00:00Z", 0, null));
         }
 
         @Test
         void shouldThrowExceptionWhenTimestampIsNull() {
             assertThrows(IllegalArgumentException.class,
                     () -> new MemoryNote(new MemoryNoteId("id"), "content", List.of(), null, List.of(), List.of(),
-                            null, 0));
+                            null, 0, null));
         }
 
         @Test
         void shouldThrowExceptionWhenRetrievalCountIsNegative() {
             assertThrows(IllegalArgumentException.class,
                     () -> new MemoryNote(new MemoryNoteId("id"), "content", List.of(), null, List.of(), List.of(),
-                            "2026-03-04T16:00:00Z", -1));
+                            "2026-03-04T16:00:00Z", -1, null));
         }
 
         @Test
@@ -136,7 +138,8 @@ class DomainModelValidationTest {
                     List.of("tag"),
                     List.of(new NoteLink("note-2", "RELATED_TO")),
                     "2026-03-04T16:00:00Z",
-                    0);
+                    0,
+                    null);
 
             assertThrows(UnsupportedOperationException.class, () -> note.keywords().add("new"));
             assertThrows(UnsupportedOperationException.class, () -> note.tags().add("new"));
@@ -148,7 +151,7 @@ class DomainModelValidationTest {
         void withRetrievalCountShouldReturnNewInstance() {
             MemoryNote original = new MemoryNote(
                     new MemoryNoteId("note-1"), "content", List.of(), null, List.of(), List.of(),
-                    "2026-03-04T16:00:00Z", 0);
+                    "2026-03-04T16:00:00Z", 0, null);
 
             MemoryNote updated = original.withRetrievalCount(5);
 
@@ -162,7 +165,7 @@ class DomainModelValidationTest {
         void withLinksShouldReturnNewInstance() {
             MemoryNote original = new MemoryNote(
                     new MemoryNoteId("note-1"), "content", List.of(), null, List.of(), List.of(),
-                    "2026-03-04T16:00:00Z", 0);
+                    "2026-03-04T16:00:00Z", 0, null);
 
             List<NoteLink> newLinks = List.of(new NoteLink("note-2", "RELATED_TO"));
             MemoryNote updated = original.withLinks(newLinks);

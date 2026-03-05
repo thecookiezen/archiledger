@@ -5,7 +5,6 @@ import com.thecookiezen.archiledger.domain.model.MemoryNoteId;
 import com.thecookiezen.archiledger.domain.repository.EmbeddingsService;
 import com.thecookiezen.archiledger.domain.repository.MemoryNoteRepository;
 
-import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -25,16 +24,10 @@ class MemoryNoteServiceImpl implements MemoryNoteService {
         this.embeddingsService = embeddingsService;
     }
 
-    @PostConstruct
-    public void init() {
-        repository.findAll().forEach(embeddingsService::generateEmbeddings);
-    }
-
     @Override
     public MemoryNote createNote(MemoryNote note) {
-        MemoryNote saved = repository.save(note);
-        embeddingsService.generateEmbeddings(saved);
-        return saved;
+        float[] embedding = embeddingsService.generateEmbeddings(note);
+        return repository.save(note.withEmbedding(embedding));
     }
 
     @Override
@@ -61,7 +54,6 @@ class MemoryNoteServiceImpl implements MemoryNoteService {
     @Override
     public void deleteNote(MemoryNoteId id) {
         repository.delete(id);
-        embeddingsService.deleteEmbeddings(List.of(id.toString()));
     }
 
     @Override
@@ -103,6 +95,11 @@ class MemoryNoteServiceImpl implements MemoryNoteService {
 
     @Override
     public List<String> similaritySearch(String query) {
-        return embeddingsService.findClosestMatch(query);
+        float[] queryEmbedding = embeddingsService.embed(query);
+        return repository.findSimilar(queryEmbedding, 10).stream()
+                .map(repository::findById)
+                .flatMap(Optional::stream)
+                .map(MemoryNote::content)
+                .toList();
     }
 }

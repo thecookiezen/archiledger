@@ -119,6 +119,37 @@ class InMemoryMemoryNoteRepository implements MemoryNoteRepository {
         notes.computeIfPresent(id, (key, note) -> note.withRetrievalCount(note.retrievalCount() + 1));
     }
 
+    @Override
+    public List<MemoryNoteId> findSimilar(float[] queryEmbedding, int topK) {
+        if (queryEmbedding == null || queryEmbedding.length == 0) {
+            return List.of();
+        }
+
+        record ScoredNote(MemoryNoteId id, double score) {
+        }
+
+        return notes.values().stream()
+                .filter(note -> note.embedding() != null && note.embedding().length == queryEmbedding.length)
+                .map(note -> new ScoredNote(note.id(), cosineSimilarity(queryEmbedding, note.embedding())))
+                .sorted((a, b) -> Double.compare(b.score(), a.score()))
+                .limit(topK)
+                .map(ScoredNote::id)
+                .collect(Collectors.toList());
+    }
+
+    private static double cosineSimilarity(float[] a, float[] b) {
+        double dotProduct = 0.0;
+        double normA = 0.0;
+        double normB = 0.0;
+        for (int i = 0; i < a.length; i++) {
+            dotProduct += a[i] * b[i];
+            normA += a[i] * a[i];
+            normB += b[i] * b[i];
+        }
+        double denominator = Math.sqrt(normA) * Math.sqrt(normB);
+        return denominator == 0 ? 0.0 : dotProduct / denominator;
+    }
+
     private record StoredLink(MemoryNoteId from, MemoryNoteId to, String relationType) {
     }
 }

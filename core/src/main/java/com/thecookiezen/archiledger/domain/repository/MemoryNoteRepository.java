@@ -33,4 +33,6 @@ public interface MemoryNoteRepository {
     Map<String, Object> getGraph();
 
     void incrementRetrievalCount(MemoryNoteId id);
+
+    List<MemoryNoteId> findSimilar(float[] queryEmbedding, int topK);
 }
