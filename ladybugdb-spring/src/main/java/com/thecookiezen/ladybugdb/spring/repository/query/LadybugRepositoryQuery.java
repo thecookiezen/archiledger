@@ -42,7 +42,7 @@ public class LadybugRepositoryQuery implements RepositoryQuery {
         }
 
         if (void.class.equals(domainType) || Void.class.equals(domainType)) {
-            template.execute(queryString, params);
+            template.execute(queryMethod.getLoadExtensions(), queryString, params);
             return null;
         }
 

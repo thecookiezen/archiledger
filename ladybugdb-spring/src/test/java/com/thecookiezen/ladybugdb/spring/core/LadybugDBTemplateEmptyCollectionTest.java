@@ -116,9 +116,13 @@ class LadybugDBTemplateEmptyCollectionTest {
 
     @Test
     void execute_shouldHandleNullListParameter() {
+        Map<String, Object> params = new java.util.HashMap<>();
+        params.put("name", "null-entity");
+        params.put("type", "concept");
+        params.put("observations", null);
         assertDoesNotThrow(() -> template.execute(
                 "CREATE (e:Entity {name: $name, type: $type, observations: $observations})",
-                Map.of("name", "null-entity", "type", "concept", "observations", "null-placeholder")));
+                params));
     }
 
     record EntityRecord(String name, String type) {

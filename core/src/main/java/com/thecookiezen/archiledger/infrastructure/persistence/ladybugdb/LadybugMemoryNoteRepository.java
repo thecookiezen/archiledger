@@ -39,9 +39,12 @@ public class LadybugMemoryNoteRepository implements MemoryNoteRepository {
         ladybugNote.setTags(note.tags());
         ladybugNote.setTimestamp(note.timestamp());
         ladybugNote.setRetrievalCount(note.retrievalCount());
-        ladybugNote.setEmbedding(note.embedding());
-
         LadybugMemoryNote saved = dbRepository.save(ladybugNote);
+
+        if (note.embedding() != null && note.embedding().length > 0) {
+            dbRepository.deleteEmbedding(note.id().value());
+            dbRepository.saveEmbedding(note.id().value(), note.embedding());
+        }
 
         for (NoteLink link : note.links()) {
             addLink(note.id(), link.target(), link.relationType());
@@ -147,9 +150,7 @@ public class LadybugMemoryNoteRepository implements MemoryNoteRepository {
 
     @Override
     public List<MemoryNoteId> findSimilar(float[] queryEmbedding, int topK) {
-        return dbRepository.findSimilarRaw(queryEmbedding, topK).stream()
-                .map(MemoryNoteId::new)
-                .collect(Collectors.toList());
+        return dbRepository.findSimilarRaw(queryEmbedding, topK);
     }
 
     private MemoryNote toDomainNote(LadybugMemoryNote note) {
@@ -162,7 +163,7 @@ public class LadybugMemoryNoteRepository implements MemoryNoteRepository {
                 List.of(),
                 note.getTimestamp(),
                 note.getRetrievalCount(),
-                note.getEmbedding());
+                null);
     }
 
     private MemoryNote toDomainNoteWithLinks(LadybugMemoryNote note, String noteId) {
@@ -178,7 +179,7 @@ public class LadybugMemoryNoteRepository implements MemoryNoteRepository {
                 links,
                 note.getTimestamp(),
                 note.getRetrievalCount(),
-                note.getEmbedding());
+                null);
     }
 
     private NoteLink toDomainLink(LinkProjection projection) {

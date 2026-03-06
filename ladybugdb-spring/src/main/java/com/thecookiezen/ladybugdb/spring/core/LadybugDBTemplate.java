@@ -99,13 +99,30 @@ public class LadybugDBTemplate {
      * @param parameters the query parameters
      */
     public void execute(String cypher, Map<String, Object> parameters) {
+        execute(null, cypher, parameters);
+    }
+
+    /**
+     * Execute a Cypher query with parameters and load extensions.
+     * 
+     * @param extensions extensions to load before the query
+     * @param cypher     the Cypher query to execute
+     * @param parameters the query parameters
+     */
+    public void execute(String[] extensions, String cypher, Map<String, Object> parameters) {
         validateCypherSafety(cypher, parameters);
         execute(connection -> {
-            logger.debug("Executing Cypher: {}", cypher);
+            loadExtensions(connection, extensions);
+
             Map<String, Value> valueParameters = convertParameters(parameters);
             try (PreparedStatement statement = connection.prepare(cypher);
                     QueryResult result = connection.execute(statement, valueParameters)) {
-                logger.debug("Execute result success: {}", result.isSuccess());
+                if (!result.isSuccess()) {
+                    throw new RuntimeException("Query failed: " + cypher + " — " + result.getErrorMessage());
+                }
+            } catch (Exception e) {
+                logger.error("Failed to execute Cypher: {}", cypher, e);
+                throw new RuntimeException("Failed to execute query", e);
             } finally {
                 valueParameters.values().forEach(v -> {
                     try {
@@ -157,19 +174,15 @@ public class LadybugDBTemplate {
             connection = getConnection();
             isNewConnection = !isConnectionBoundToTransaction();
 
-            if (extensions != null && extensions.length > 0) {
-                for (String ext : extensions) {
-                    try (var res = connection.query("LOAD " + ext)) {
-                        if (!res.isSuccess()) {
-                            logger.warn("Failed to load extension '{}': {}", ext, res.getErrorMessage());
-                        }
-                    }
-                }
-            }
+            loadExtensions(connection, extensions);
 
             valueParameters = convertParameters(parameters);
             statement = connection.prepare(cypher);
             result = connection.execute(statement, valueParameters);
+
+            if (!result.isSuccess()) {
+                throw new RuntimeException("Query failed: " + cypher + " — " + result.getErrorMessage());
+            }
 
             int numColumns = (int) result.getNumColumns();
             Map<String, Integer> columnToIndex = new HashMap<>(numColumns);
@@ -385,6 +398,20 @@ public class LadybugDBTemplate {
      */
     public List<String> queryForStringList(String cypher, String columnName) {
         return query(cypher, (row) -> row.getValue(columnName).getValue().toString());
+    }
+
+    private void loadExtensions(Connection connection, String[] extensions) {
+        if (extensions != null && extensions.length > 0) {
+            for (String ext : extensions) {
+                try (var res = connection.query("LOAD " + ext)) {
+                    if (!res.isSuccess()) {
+                        logger.warn("Failed to load extension '{}': {}", ext, res.getErrorMessage());
+                    }
+                } catch (Exception e) {
+                    logger.error("Error loading extension '{}'", ext, e);
+                }
+            }
+        }
     }
 
     private void validateCypherSafety(String cypher, Map<String, Object> parameters) {

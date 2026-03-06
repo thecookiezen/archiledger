@@ -2,6 +2,7 @@ package com.thecookiezen.archiledger.infrastructure.config;
 
 import com.ladybugdb.Connection;
 import com.ladybugdb.Database;
+import com.thecookiezen.archiledger.domain.model.MemoryNoteId;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.LadybugMemoryNote;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.LadybugNoteLink;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.LinkProjection;
@@ -74,11 +75,25 @@ public class LadybugDBConfig {
     private void initializeSchema(Database db) {
         try (Connection conn = new Connection(db)) {
             try (var r1 = conn.query(
-                    "CREATE NODE TABLE IF NOT EXISTS MemoryNote(id STRING PRIMARY KEY, content STRING, keywords STRING[], context STRING, tags STRING[], timestamp STRING, retrievalCount INT64, embedding FLOAT[384])")) {
+                    "CREATE NODE TABLE IF NOT EXISTS MemoryNote(id STRING PRIMARY KEY, content STRING, keywords STRING[], context STRING, tags STRING[], timestamp STRING, retrievalCount INT64)")) {
                 if (!r1.isSuccess()) {
                     throw new RuntimeException("Failed to create MemoryNote table: " + r1.getErrorMessage());
                 }
                 logger.info("MemoryNote node table ready");
+            }
+            try (var re = conn.query(
+                    "CREATE NODE TABLE IF NOT EXISTS NoteEmbedding(noteId STRING PRIMARY KEY, embedding FLOAT[384])")) {
+                if (!re.isSuccess()) {
+                    throw new RuntimeException("Failed to create NoteEmbedding table: " + re.getErrorMessage());
+                }
+                logger.info("NoteEmbedding node table ready");
+            }
+            try (var rl = conn.query(
+                    "CREATE REL TABLE IF NOT EXISTS HAS_EMBEDDING(FROM MemoryNote TO NoteEmbedding)")) {
+                if (!rl.isSuccess()) {
+                    throw new RuntimeException("Failed to create HAS_EMBEDDING table: " + rl.getErrorMessage());
+                }
+                logger.info("HAS_EMBEDDING relationship table ready");
             }
             try (var r2 = conn.query(
                     "CREATE REL TABLE IF NOT EXISTS LINKED_TO(FROM MemoryNote TO MemoryNote, name STRING, relationType STRING)")) {
@@ -115,7 +130,15 @@ public class LadybugDBConfig {
         registry.registerDescriptor(LadybugMemoryNote.class, memoryNoteReader(), memoryNoteWriter());
         registry.registerDescriptor(LadybugNoteLink.class, noteLinkReader(), noteLinkWriter());
         registry.registerDescriptor(LinkProjection.class, linkProjectionReader(), entity -> Map.of());
+        registry.registerDescriptor(MemoryNoteId.class, memoryNoteIdReader(), entity -> Map.of());
         return registry;
+    }
+
+    private RowMapper<MemoryNoteId> memoryNoteIdReader() {
+        return row -> {
+            var id = row.getValue("id");
+            return new MemoryNoteId(ValueMappers.asString(id));
+        };
     }
 
     private RowMapper<LadybugMemoryNote> memoryNoteReader() {
@@ -130,7 +153,6 @@ public class LadybugDBConfig {
             note.setTimestamp(ValueMappers.asString(node.get("timestamp")));
             Integer retrievalCount = ValueMappers.asInteger(node.get("retrievalCount"));
             note.setRetrievalCount(retrievalCount != null ? retrievalCount : 0);
-            note.setEmbedding(ValueMappers.asFloatArray(node.get("embedding")));
             return note;
         };
     }
@@ -144,7 +166,6 @@ public class LadybugDBConfig {
             props.put("tags", note.getTags());
             props.put("timestamp", note.getTimestamp());
             props.put("retrievalCount", note.getRetrievalCount());
-            props.put("embedding", note.getEmbedding());
             return props;
         };
     }

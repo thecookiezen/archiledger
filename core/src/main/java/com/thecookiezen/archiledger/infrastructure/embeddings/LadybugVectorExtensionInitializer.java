@@ -17,8 +17,8 @@ public class LadybugVectorExtensionInitializer {
 
     private static final Logger logger = LoggerFactory.getLogger(LadybugVectorExtensionInitializer.class);
 
-    private static final String VECTOR_INDEX_NAME = "memory_note_embedding_idx";
-    private static final String TABLE_NAME = "MemoryNote";
+    private static final String VECTOR_INDEX_NAME = "note_embedding_idx";
+    private static final String TABLE_NAME = "NoteEmbedding";
     private static final String EMBEDDING_PROPERTY = "embedding";
 
     private final Database database;
