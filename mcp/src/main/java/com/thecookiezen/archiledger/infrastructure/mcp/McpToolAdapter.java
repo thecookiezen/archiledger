@@ -4,6 +4,8 @@ import com.thecookiezen.archiledger.application.service.MemoryNoteService;
 import com.thecookiezen.archiledger.domain.model.MemoryNoteId;
 import com.thecookiezen.archiledger.infrastructure.mcp.dto.MemoryNoteDto;
 import com.thecookiezen.archiledger.infrastructure.mcp.dto.NoteLinkDto;
+import com.thecookiezen.archiledger.infrastructure.mcp.dto.NoteLinksDto;
+
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
@@ -33,13 +35,14 @@ public class McpToolAdapter {
 
         @Tool(name = "add_links", description = "Add typed links between existing memory notes. Links represent connections with a relation type (e.g., 'DEPENDS_ON', 'RELATED_TO', 'CONTRADICTS').")
         public void addLinks(
-                        @ToolParam(description = "List of links to create, each with source note ID, target note ID, and relation type") List<NoteLinkDto> links,
-                        @ToolParam(description = "The source note ID that all links originate from") String fromNoteId) {
-                for (NoteLinkDto link : links) {
-                        memoryNoteService.addLink(
-                                        new MemoryNoteId(fromNoteId),
-                                        new MemoryNoteId(link.target()),
-                                        link.relationType());
+                        @ToolParam(description = "List of links to create, each with source note ID, target note ID, and relation type") List<NoteLinksDto> links) {
+                for (NoteLinksDto link : links) {
+                        for (NoteLinkDto noteLink : link.links()) {
+                                memoryNoteService.addLink(
+                                                new MemoryNoteId(link.fromNoteId()),
+                                                new MemoryNoteId(noteLink.target()),
+                                                noteLink.relationType());
+                        }
                 }
         }
 
