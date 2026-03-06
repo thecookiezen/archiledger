@@ -225,6 +225,7 @@ public class LadybugDBTemplate {
                     });
 
         } catch (Exception e) {
+            logger.error("Failed to initialize stream", e);
             closeQuietly(result);
             closeQuietly(statement);
             valueParameters.values().forEach(this::closeQuietly);
@@ -425,10 +426,78 @@ public class LadybugDBTemplate {
 
     @SuppressWarnings("resource")
     private Value toValue(Object obj) {
-        if (obj == null)
+        if (obj == null) {
             return Value.createNull();
+        }
+
         if (obj instanceof Value v)
             return v;
+        if (obj.getClass().isArray()) {
+            if (obj instanceof float[] fa) {
+                Float[] boxed = new Float[fa.length];
+                for (int i = 0; i < fa.length; i++)
+                    boxed[i] = fa[i];
+                obj = boxed;
+            } else if (obj instanceof int[] ia) {
+                Integer[] boxed = new Integer[ia.length];
+                for (int i = 0; i < ia.length; i++)
+                    boxed[i] = ia[i];
+                obj = boxed;
+            } else if (obj instanceof double[] da) {
+                Double[] boxed = new Double[da.length];
+                for (int i = 0; i < da.length; i++)
+                    boxed[i] = da[i];
+                obj = boxed;
+            } else if (obj instanceof long[] la) {
+                Long[] boxed = new Long[la.length];
+                for (int i = 0; i < la.length; i++)
+                    boxed[i] = la[i];
+                obj = boxed;
+            } else if (obj instanceof boolean[] ba) {
+                Boolean[] boxed = new Boolean[ba.length];
+                for (int i = 0; i < ba.length; i++)
+                    boxed[i] = ba[i];
+                obj = boxed;
+            } else if (obj instanceof byte[] ba) {
+                Byte[] boxed = new Byte[ba.length];
+                for (int i = 0; i < ba.length; i++)
+                    boxed[i] = ba[i];
+                obj = boxed;
+            } else if (obj instanceof short[] sa) {
+                Short[] boxed = new Short[sa.length];
+                for (int i = 0; i < sa.length; i++)
+                    boxed[i] = sa[i];
+                obj = boxed;
+            } else if (obj instanceof char[] ca) {
+                Character[] boxed = new Character[ca.length];
+                for (int i = 0; i < ca.length; i++)
+                    boxed[i] = ca[i];
+                obj = boxed;
+            }
+
+            Object[] a = (Object[]) obj;
+            if (a.length == 0) {
+                return Value.createNull();
+            }
+            Value[] values = new Value[a.length];
+            try {
+                int i = 0;
+                for (Object o : a) {
+                    values[i++] = toValue(o);
+                }
+                return new LbugList(values).getValue();
+            } finally {
+                for (Value v : values) {
+                    if (v != null) {
+                        try {
+                            v.close();
+                        } catch (Exception e) {
+                            /* ignore */
+                        }
+                    }
+                }
+            }
+        }
         if (obj instanceof Collection c) {
             if (c.isEmpty()) {
                 return Value.createNull();
