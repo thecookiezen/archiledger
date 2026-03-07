@@ -117,7 +117,7 @@ RowMapper<Follows> followsMapper = (row) -> {
 };
 ```
 
-### use Custom Queries
+### Use Custom Queries
 
 You can execute custom Cypher queries using the `@Query` annotation on your repository interface.
 
@@ -130,6 +130,50 @@ public interface PersonRepository extends NodeRepository<Person, String, Void, P
     @Query("MATCH (p:Person {name: $name}) SET p.age = $newAge RETURN p")
     Optional<Person> updateAge(@Param("name") String name, @Param("newAge") int newAge);
 }
+```
+
+### Extension Loading
+
+LadybugDB supports dynamic extension loading (e.g., for vector search). You can load extensions both through the template and the repository.
+
+#### Using `LadybugDBTemplate`
+
+Pass an array of extension names as the first argument to `query`, `stream`, or `execute`:
+
+```java
+List<Note> results = template.query(
+    new String[]{"vector"}, // Extensions to load
+    "MATCH (n:Note) WHERE vector_search(n.embedding, $embedding) RETURN n",
+    Map.of("embedding", queryVector),
+    noteReader
+);
+```
+
+#### Using `@Query` Annotation
+
+Use the `loadExtensions` attribute in the `@Query` annotation:
+
+```java
+public interface NoteRepository extends NodeRepository<Note, String, Void, Note> {
+
+    @Query(
+        value = "MATCH (n:Note) WHERE vector_search(n.embedding, $query, metric := 'cosine') < 0.5 RETURN n",
+        loadExtensions = {"vector"}
+    )
+    List<Note> findSimilarNotes(@Param("query") float[] query);
+}
+```
+
+#### Manual Setup
+
+You can also execute manual setup commands for extensions:
+
+```java
+// Install extension (usually required once)
+template.execute("INSTALL vector");
+
+// Configure extension directory if needed
+template.execute("CALL home_directory='/path/to/extensions'");
 ```
 
 ## Components
