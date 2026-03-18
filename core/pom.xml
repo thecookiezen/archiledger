@@ -9,11 +9,9 @@
     </parent>
     <artifactId>archiledger-core</artifactId>
     <name>archiledger-core</name>
-    <description>Core domain and persistence logic</description>
-
-    <properties>
-    </properties>
-
+    <description>Knowledge Graph that serves as a memory system for AI. Core domain and persistence logic</description>
+    <packaging>jar</packaging>
+    
     <dependencies>
         <dependency>
             <groupId>org.springframework.ai</groupId>

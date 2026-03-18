@@ -11,6 +11,13 @@
     <name>archiledger-server</name>
     <description>MCP Server Implementation</description>
 
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <central.skip>true</central.skip>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+        <maven.source.skip>true</maven.source.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.thecookiezen</groupId>

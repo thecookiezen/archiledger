@@ -11,6 +11,13 @@
     <name>load-tests</name>
     <description>Performance and Load Tests</description>
 
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <central.skip>true</central.skip>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+        <maven.source.skip>true</maven.source.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.thecookiezen</groupId>

@@ -23,6 +23,7 @@ dependency-reduced-pom.xml
 buildNumber
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.properties
+.flattened-pom.xml
 
 # IDE - VS Code
 .vscode/
