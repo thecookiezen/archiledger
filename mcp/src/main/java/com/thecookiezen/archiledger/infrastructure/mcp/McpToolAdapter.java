@@ -1,7 +1,9 @@
 package com.thecookiezen.archiledger.infrastructure.mcp;
 
 import com.thecookiezen.archiledger.application.service.MemoryNoteService;
+import com.thecookiezen.archiledger.domain.model.MemoryNote;
 import com.thecookiezen.archiledger.domain.model.MemoryNoteId;
+import com.thecookiezen.archiledger.domain.model.SimilarityResult;
 import com.thecookiezen.archiledger.infrastructure.mcp.dto.MemoryNoteDto;
 import com.thecookiezen.archiledger.infrastructure.mcp.dto.NoteLinkDto;
 import com.thecookiezen.archiledger.infrastructure.mcp.dto.NoteLinksDto;
@@ -70,7 +72,7 @@ public class McpToolAdapter {
         }
 
         @Tool(name = "search_notes", description = "Perform a semantic similarity search across all memory notes. Returns the most relevant notes based on vector embeddings of their content.")
-        public List<String> searchNotes(
+        public List<SimilarityResult<MemoryNote>> searchNotes(
                         @ToolParam(description = "Natural language query to search for similar notes") String query) {
                 return memoryNoteService.similaritySearch(query);
         }
