@@ -2,6 +2,7 @@ package com.thecookiezen.archiledger.application.service;
 
 import com.thecookiezen.archiledger.domain.model.MemoryNote;
 import com.thecookiezen.archiledger.domain.model.MemoryNoteId;
+import com.thecookiezen.archiledger.domain.model.SimilarityResult;
 import com.thecookiezen.archiledger.domain.repository.EmbeddingsService;
 import com.thecookiezen.archiledger.domain.repository.MemoryNoteRepository;
 import org.junit.jupiter.api.Test;
@@ -160,16 +161,15 @@ class MemoryNoteServiceImplTest {
     @Test
     void similaritySearch_embedsQueryAndDelegatesToRepository() {
         float[] queryEmbedding = new float[] { 0.1f, 0.2f, 0.3f };
-        MemoryNoteId matchId = new MemoryNoteId("match-1");
         MemoryNote matchedNote = sampleNote("match-1");
         when(embeddingsService.embed("architecture")).thenReturn(queryEmbedding);
-        when(repository.findSimilar(queryEmbedding, 10)).thenReturn(List.of(matchId));
-        when(repository.findById(matchId)).thenReturn(Optional.of(matchedNote));
+        when(repository.findSimilar(queryEmbedding, 10))
+                .thenReturn(List.of(new SimilarityResult<>(matchedNote, 0.95)));
 
-        List<String> results = service.similaritySearch("architecture");
+        List<SimilarityResult<MemoryNote>> results = service.similaritySearch("architecture");
 
         assertEquals(1, results.size());
-        assertEquals("Sample content for match-1", results.get(0));
+        assertEquals("Sample content for match-1", results.get(0).item().content());
         verify(embeddingsService).embed("architecture");
         verify(repository).findSimilar(queryEmbedding, 10);
     }

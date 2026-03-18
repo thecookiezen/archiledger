@@ -3,6 +3,7 @@ package com.thecookiezen.archiledger.infrastructure.persistence;
 import com.thecookiezen.archiledger.domain.model.MemoryNote;
 import com.thecookiezen.archiledger.domain.model.MemoryNoteId;
 import com.thecookiezen.archiledger.domain.model.NoteLink;
+import com.thecookiezen.archiledger.domain.model.SimilarityResult;
 import com.thecookiezen.archiledger.domain.repository.MemoryNoteRepository;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
@@ -120,7 +121,7 @@ class InMemoryMemoryNoteRepository implements MemoryNoteRepository {
     }
 
     @Override
-    public List<MemoryNoteId> findSimilar(float[] queryEmbedding, int topK) {
+    public List<SimilarityResult<MemoryNote>> findSimilar(float[] queryEmbedding, int topK) {
         if (queryEmbedding == null || queryEmbedding.length == 0) {
             return List.of();
         }
@@ -133,7 +134,7 @@ class InMemoryMemoryNoteRepository implements MemoryNoteRepository {
                 .map(note -> new ScoredNote(note.id(), cosineSimilarity(queryEmbedding, note.embedding())))
                 .sorted((a, b) -> Double.compare(b.score(), a.score()))
                 .limit(topK)
-                .map(ScoredNote::id)
+                .map(scored -> new SimilarityResult<>(findById(scored.id()).orElseThrow(), scored.score()))
                 .collect(Collectors.toList());
     }
 

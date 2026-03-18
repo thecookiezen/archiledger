@@ -2,6 +2,7 @@ package com.thecookiezen.archiledger.application.service;
 
 import com.thecookiezen.archiledger.domain.model.MemoryNote;
 import com.thecookiezen.archiledger.domain.model.MemoryNoteId;
+import com.thecookiezen.archiledger.domain.model.SimilarityResult;
 import com.thecookiezen.archiledger.domain.repository.EmbeddingsService;
 import com.thecookiezen.archiledger.domain.repository.MemoryNoteRepository;
 
@@ -94,12 +95,8 @@ class MemoryNoteServiceImpl implements MemoryNoteService {
     }
 
     @Override
-    public List<String> similaritySearch(String query) {
+    public List<SimilarityResult<MemoryNote>> similaritySearch(String query) {
         float[] queryEmbedding = embeddingsService.embed(query);
-        return repository.findSimilar(queryEmbedding, 10).stream()
-                .map(repository::findById)
-                .flatMap(Optional::stream)
-                .map(MemoryNote::content)
-                .toList();
+        return repository.findSimilar(queryEmbedding, 10);
     }
 }

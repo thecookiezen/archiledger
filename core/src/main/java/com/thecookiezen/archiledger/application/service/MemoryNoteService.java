@@ -2,6 +2,7 @@ package com.thecookiezen.archiledger.application.service;
 
 import com.thecookiezen.archiledger.domain.model.MemoryNote;
 import com.thecookiezen.archiledger.domain.model.MemoryNoteId;
+import com.thecookiezen.archiledger.domain.model.SimilarityResult;
 
 import java.util.List;
 import java.util.Map;
@@ -33,5 +34,5 @@ public interface MemoryNoteService {
 
     Map<String, Object> readGraph();
 
-    List<String> similaritySearch(String query);
+    List<SimilarityResult<MemoryNote>> similaritySearch(String query);
 }

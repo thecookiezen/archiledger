@@ -2,10 +2,10 @@ package com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb;
 
 import java.util.List;
 
-import com.thecookiezen.archiledger.domain.model.MemoryNoteId;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.LadybugMemoryNote;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.LadybugNoteLink;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.LinkProjection;
+import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.SimilarityResultProjection;
 import com.thecookiezen.ladybugdb.spring.annotation.Query;
 import com.thecookiezen.ladybugdb.spring.repository.NodeRepository;
 
@@ -33,9 +33,9 @@ public interface MemoryNoteDbRepository
         @Query("MATCH (source:MemoryNote)-[r:LINKED_TO]->(target:MemoryNote) RETURN source.id AS fromId, target.id AS toId, r.relationType AS relationType")
         List<LinkProjection> findAllLinks();
 
-        @Query(value = "CALL QUERY_VECTOR_INDEX('NoteEmbedding', 'note_embedding_idx', $queryVector, $limit) RETURN node.noteId AS id, distance ORDER BY distance", loadExtensions = {
+        @Query(value = "CALL QUERY_VECTOR_INDEX('NoteEmbedding', 'note_embedding_idx', $queryVector, $limit) YIELD node, distance MATCH (n:MemoryNote)-[:HAS_EMBEDDING]->(node) RETURN n AS note, distance AS score ORDER BY distance", loadExtensions = {
                         "vector" })
-        List<MemoryNoteId> findSimilarRaw(float[] queryVector, long limit);
+        List<SimilarityResultProjection> findSimilarRaw(float[] queryVector, long limit);
 
         @Query("MATCH (e:NoteEmbedding {noteId: $noteId}) DETACH DELETE e")
         void deleteEmbedding(String noteId);

@@ -3,6 +3,7 @@ package com.thecookiezen.archiledger.domain.repository;
 import com.thecookiezen.archiledger.domain.model.MemoryNote;
 import com.thecookiezen.archiledger.domain.model.MemoryNoteId;
 import com.thecookiezen.archiledger.domain.model.NoteLink;
+import com.thecookiezen.archiledger.domain.model.SimilarityResult;
 
 import java.util.List;
 import java.util.Map;
@@ -34,5 +35,5 @@ public interface MemoryNoteRepository {
 
     void incrementRetrievalCount(MemoryNoteId id);
 
-    List<MemoryNoteId> findSimilar(float[] queryEmbedding, int topK);
+    List<SimilarityResult<MemoryNote>> findSimilar(float[] queryEmbedding, int topK);
 }

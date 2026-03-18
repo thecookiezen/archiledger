@@ -3,6 +3,7 @@ package com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb;
 import com.thecookiezen.archiledger.domain.model.MemoryNote;
 import com.thecookiezen.archiledger.domain.model.MemoryNoteId;
 import com.thecookiezen.archiledger.domain.model.NoteLink;
+import com.thecookiezen.archiledger.domain.model.SimilarityResult;
 import com.thecookiezen.archiledger.domain.repository.MemoryNoteRepository;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.LadybugMemoryNote;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.LadybugNoteLink;
@@ -149,8 +150,12 @@ public class LadybugMemoryNoteRepository implements MemoryNoteRepository {
     }
 
     @Override
-    public List<MemoryNoteId> findSimilar(float[] queryEmbedding, int topK) {
-        return dbRepository.findSimilarRaw(queryEmbedding, topK);
+    public List<SimilarityResult<MemoryNote>> findSimilar(float[] queryEmbedding, int topK) {
+        return dbRepository.findSimilarRaw(queryEmbedding, topK).stream()
+                .map(projection -> new SimilarityResult<>(
+                        toDomainNoteWithLinks(projection.note(), projection.note().getId()),
+                        projection.score()))
+                .toList();
     }
 
     private MemoryNote toDomainNote(LadybugMemoryNote note) {
