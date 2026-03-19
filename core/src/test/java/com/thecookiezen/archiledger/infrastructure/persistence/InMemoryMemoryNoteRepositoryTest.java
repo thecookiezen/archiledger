@@ -153,6 +153,134 @@ class InMemoryMemoryNoteRepositoryTest {
     }
 
     @Test
+    void findLinkedNotes_withRelationTypeAndLimit_filtersCorrectly() {
+        repository.save(sampleNote("A", List.of()));
+        repository.save(sampleNote("B", List.of()));
+        repository.save(sampleNote("C", List.of()));
+        repository.save(sampleNote("D", List.of()));
+
+        repository.addLink(new MemoryNoteId("A"), new MemoryNoteId("B"), "CONTAINS");
+        repository.addLink(new MemoryNoteId("A"), new MemoryNoteId("C"), "CONTAINS");
+        repository.addLink(new MemoryNoteId("A"), new MemoryNoteId("D"), "RELATED_TO");
+
+        List<MemoryNote> result = repository.findLinkedNotes(new MemoryNoteId("A"), "CONTAINS", 2);
+
+        assertEquals(2, result.size());
+        assertTrue(result.stream().anyMatch(n -> n.id().equals(new MemoryNoteId("B"))));
+        assertTrue(result.stream().anyMatch(n -> n.id().equals(new MemoryNoteId("C"))));
+    }
+
+    @Test
+    void findLinkedNotes_withLimit_respectsLimit() {
+        repository.save(sampleNote("A", List.of()));
+        repository.save(sampleNote("B", List.of()));
+        repository.save(sampleNote("C", List.of()));
+        repository.save(sampleNote("D", List.of()));
+
+        repository.addLink(new MemoryNoteId("A"), new MemoryNoteId("B"), "CONTAINS");
+        repository.addLink(new MemoryNoteId("A"), new MemoryNoteId("C"), "CONTAINS");
+        repository.addLink(new MemoryNoteId("A"), new MemoryNoteId("D"), "CONTAINS");
+
+        List<MemoryNote> result = repository.findLinkedNotes(new MemoryNoteId("A"), "CONTAINS", 2);
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void findLinkedNotes_withRelationType_returnsEmptyWhenNoMatch() {
+        repository.save(sampleNote("A", List.of()));
+        repository.save(sampleNote("B", List.of()));
+        repository.addLink(new MemoryNoteId("A"), new MemoryNoteId("B"), "CONTAINS");
+
+        List<MemoryNote> result = repository.findLinkedNotes(new MemoryNoteId("A"), "RELATED_TO", 10);
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void findNotesUpward_traversesMultipleHops() {
+        repository.save(sampleNote("A", List.of()));
+        repository.save(sampleNote("B", List.of()));
+        repository.save(sampleNote("C", List.of()));
+
+        repository.addLink(new MemoryNoteId("A"), new MemoryNoteId("B"), "CONTAINS");
+        repository.addLink(new MemoryNoteId("B"), new MemoryNoteId("C"), "CONTAINS");
+
+        List<MemoryNote> result = repository.findNotesUpward(new MemoryNoteId("A"), 2, 10);
+
+        assertEquals(2, result.size());
+        assertTrue(result.stream().anyMatch(n -> n.id().equals(new MemoryNoteId("B"))));
+        assertTrue(result.stream().anyMatch(n -> n.id().equals(new MemoryNoteId("C"))));
+    }
+
+    @Test
+    void findNotesUpward_respectsMaxHops() {
+        repository.save(sampleNote("A", List.of()));
+        repository.save(sampleNote("B", List.of()));
+        repository.save(sampleNote("C", List.of()));
+        repository.save(sampleNote("D", List.of()));
+
+        repository.addLink(new MemoryNoteId("A"), new MemoryNoteId("B"), "CONTAINS");
+        repository.addLink(new MemoryNoteId("B"), new MemoryNoteId("C"), "CONTAINS");
+        repository.addLink(new MemoryNoteId("C"), new MemoryNoteId("D"), "CONTAINS");
+
+        List<MemoryNote> result = repository.findNotesUpward(new MemoryNoteId("A"), 2, 10);
+
+        assertEquals(2, result.size());
+        assertTrue(result.stream().anyMatch(n -> n.id().equals(new MemoryNoteId("B"))));
+        assertTrue(result.stream().anyMatch(n -> n.id().equals(new MemoryNoteId("C"))));
+        assertFalse(result.stream().anyMatch(n -> n.id().equals(new MemoryNoteId("D"))));
+    }
+
+    @Test
+    void findNotesUpward_respectsLimit() {
+        repository.save(sampleNote("A", List.of()));
+        repository.save(sampleNote("B", List.of()));
+        repository.save(sampleNote("C", List.of()));
+        repository.save(sampleNote("D", List.of()));
+
+        repository.addLink(new MemoryNoteId("A"), new MemoryNoteId("B"), "CONTAINS");
+        repository.addLink(new MemoryNoteId("A"), new MemoryNoteId("C"), "CONTAINS");
+        repository.addLink(new MemoryNoteId("A"), new MemoryNoteId("D"), "CONTAINS");
+
+        List<MemoryNote> result = repository.findNotesUpward(new MemoryNoteId("A"), 1, 2);
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void findNotesUpward_filtersByRelationType() {
+        repository.save(sampleNote("A", List.of()));
+        repository.save(sampleNote("B", List.of()));
+        repository.save(sampleNote("C", List.of()));
+
+        repository.addLink(new MemoryNoteId("A"), new MemoryNoteId("B"), "CONTAINS");
+        repository.addLink(new MemoryNoteId("A"), new MemoryNoteId("C"), "RELATED_TO");
+
+        List<MemoryNote> result = repository.findNotesUpward(new MemoryNoteId("A"), 1, 10);
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void findNotesUpward_avoidsCycles() {
+        repository.save(sampleNote("A", List.of()));
+        repository.save(sampleNote("B", List.of()));
+        repository.save(sampleNote("C", List.of()));
+
+        repository.addLink(new MemoryNoteId("A"), new MemoryNoteId("B"), "CONTAINS");
+        repository.addLink(new MemoryNoteId("B"), new MemoryNoteId("C"), "CONTAINS");
+        repository.addLink(new MemoryNoteId("C"), new MemoryNoteId("A"), "CONTAINS");
+
+        List<MemoryNote> result = repository.findNotesUpward(new MemoryNoteId("A"), 5, 10);
+
+        assertEquals(2, result.size());
+        assertTrue(result.stream().anyMatch(n -> n.id().equals(new MemoryNoteId("B"))));
+        assertTrue(result.stream().anyMatch(n -> n.id().equals(new MemoryNoteId("C"))));
+        assertFalse(result.stream().anyMatch(n -> n.id().equals(new MemoryNoteId("A"))));
+    }
+
+    @Test
     void findAllTags_returnsUniqueTags() {
         repository.save(sampleNote("n1", List.of("architecture", "backend")));
         repository.save(sampleNote("n2", List.of("architecture", "frontend")));

@@ -139,6 +139,32 @@ class MemoryNoteServiceImplTest {
     }
 
     @Test
+    void getLinkedNotes_withRelationTypeAndLimit_fetchesNotes() {
+        MemoryNoteId noteId = new MemoryNoteId("A");
+        MemoryNote noteB = sampleNote("B");
+        MemoryNote noteC = sampleNote("C");
+        when(repository.findLinkedNotes(noteId, "CONTAINS", 5)).thenReturn(List.of(noteB, noteC));
+
+        List<MemoryNote> result = service.getLinkedNotes(noteId, "CONTAINS", 5);
+
+        assertEquals(2, result.size());
+        verify(repository).findLinkedNotes(noteId, "CONTAINS", 5);
+    }
+
+    @Test
+    void getNotesUpward_fetchesNotes() {
+        MemoryNoteId noteId = new MemoryNoteId("A");
+        MemoryNote parent = sampleNote("PARENT");
+        when(repository.findNotesUpward(noteId, 3, 5)).thenReturn(List.of(parent));
+
+        List<MemoryNote> result = service.getNotesUpward(noteId, 3, 5);
+
+        assertEquals(1, result.size());
+        assertEquals("PARENT", result.get(0).id().value());
+        verify(repository).findNotesUpward(noteId, 3, 5);
+    }
+
+    @Test
     void getAllTags_delegatesToRepository() {
         when(repository.findAllTags()).thenReturn(Set.of("architecture", "decision"));
 

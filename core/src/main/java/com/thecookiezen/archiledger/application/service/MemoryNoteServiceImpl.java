@@ -85,6 +85,16 @@ class MemoryNoteServiceImpl implements MemoryNoteService {
     }
 
     @Override
+    public List<MemoryNote> getLinkedNotes(MemoryNoteId noteId, String relationType, int limit) {
+        return repository.findLinkedNotes(noteId, relationType, limit);
+    }
+
+    @Override
+    public List<MemoryNote> getNotesUpward(MemoryNoteId noteId, int maxHops, int limit) {
+        return repository.findNotesUpward(noteId, maxHops, limit);
+    }
+
+    @Override
     public Set<String> getAllTags() {
         return repository.findAllTags();
     }

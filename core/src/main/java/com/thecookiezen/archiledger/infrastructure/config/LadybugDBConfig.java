@@ -115,8 +115,8 @@ public class LadybugDBConfig {
     }
 
     @Bean
-    public LadybugDBTemplate ladybugDBTemplate(LadybugDBConnectionFactory connectionFactory) {
-        return new LadybugDBTemplate(connectionFactory);
+    public LadybugDBTemplate ladybugDBTemplate(LadybugDBConnectionFactory connectionFactory, EntityRegistry registry) {
+        return new LadybugDBTemplate(connectionFactory, registry);
     }
 
     @Bean

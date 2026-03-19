@@ -30,6 +30,10 @@ public interface MemoryNoteService {
 
     List<MemoryNote> getLinkedNotes(MemoryNoteId noteId);
 
+    List<MemoryNote> getLinkedNotes(MemoryNoteId noteId, String relationType, int limit);
+
+    List<MemoryNote> getNotesUpward(MemoryNoteId noteId, int maxHops, int limit);
+
     Set<String> getAllTags();
 
     Map<String, Object> readGraph();

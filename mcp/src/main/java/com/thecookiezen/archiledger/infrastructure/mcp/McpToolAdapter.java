@@ -71,6 +71,26 @@ public class McpToolAdapter {
                                 .collect(Collectors.toList());
         }
 
+        @Tool(name = "get_linked_notes_by_type", description = "Find notes connected to a given note with a specific relation type. Useful for filtering by relationship kind (e.g., 'DEPENDS_ON', 'CONTAINS', 'RELATED_TO').")
+        public List<MemoryNoteDto> getLinkedNotesByType(
+                        @ToolParam(description = "ID of the note to find connections for") String noteId,
+                        @ToolParam(description = "Relation type to filter by (e.g., 'DEPENDS_ON', 'CONTAINS', 'RELATED_TO')") String relationType,
+                        @ToolParam(description = "Maximum number of notes to return") int limit) {
+                return memoryNoteService.getLinkedNotes(new MemoryNoteId(noteId), relationType, limit).stream()
+                                .map(MemoryNoteDto::fromDomain)
+                                .collect(Collectors.toList());
+        }
+
+        @Tool(name = "get_notes_upward", description = "Traverse the graph upward from a note. Performs multi-hop traversal to find all reachable notes within maxHops distance.")
+        public List<MemoryNoteDto> getNotesUpward(
+                        @ToolParam(description = "ID of the starting note") String noteId,
+                        @ToolParam(description = "Maximum number of hops to traverse") int maxHops,
+                        @ToolParam(description = "Maximum number of notes to return") int limit) {
+                return memoryNoteService.getNotesUpward(new MemoryNoteId(noteId), maxHops, limit).stream()
+                                .map(MemoryNoteDto::fromDomain)
+                                .collect(Collectors.toList());
+        }
+
         @Tool(name = "search_notes", description = "Perform a semantic similarity search across all memory notes. Returns the most relevant notes based on vector embeddings of their content.")
         public List<SimilarityResult<MemoryNote>> searchNotes(
                         @ToolParam(description = "Natural language query to search for similar notes") String query) {

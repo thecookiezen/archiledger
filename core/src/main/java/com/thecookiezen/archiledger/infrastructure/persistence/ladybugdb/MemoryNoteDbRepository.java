@@ -27,6 +27,9 @@ public interface MemoryNoteDbRepository
         @Query("MATCH (n:MemoryNote)-[r:LINKED_TO]-(m:MemoryNote) WHERE n.id = $noteId RETURN DISTINCT m AS n")
         List<LadybugMemoryNote> findLinkedNotes(String noteId);
 
+        @Query("MATCH (n:MemoryNote)-[r:LINKED_TO]-(m:MemoryNote) WHERE n.id = $noteId AND r.relationType = $relationType RETURN DISTINCT m as n LIMIT $limit")
+        List<LadybugMemoryNote> findLinkedNotes(String noteId, String relationType, int limit);
+
         @Query("MATCH (n:MemoryNote) UNWIND n.tags AS tag RETURN DISTINCT tag")
         List<String> findAllTags();
 

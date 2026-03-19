@@ -8,6 +8,8 @@ import com.thecookiezen.archiledger.domain.repository.MemoryNoteRepository;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.LadybugMemoryNote;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.LadybugNoteLink;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.LinkProjection;
+import com.thecookiezen.ladybugdb.spring.core.LadybugDBTemplate;
+
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
@@ -23,9 +25,11 @@ import java.util.stream.StreamSupport;
 public class LadybugMemoryNoteRepository implements MemoryNoteRepository {
 
     private final MemoryNoteDbRepository dbRepository;
+    private final LadybugDBTemplate template;
 
-    public LadybugMemoryNoteRepository(MemoryNoteDbRepository dbRepository) {
+    public LadybugMemoryNoteRepository(MemoryNoteDbRepository dbRepository, LadybugDBTemplate template) {
         this.dbRepository = dbRepository;
+        this.template = template;
     }
 
     @Override
@@ -64,7 +68,7 @@ public class LadybugMemoryNoteRepository implements MemoryNoteRepository {
     public List<MemoryNote> findAll() {
         return StreamSupport.stream(dbRepository.findAll().spliterator(), false)
                 .map(note -> toDomainNoteWithLinks(note, note.getId()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -96,7 +100,7 @@ public class LadybugMemoryNoteRepository implements MemoryNoteRepository {
             List<LadybugNoteLink> matching = dbRepository.findRelationsBySource(sourceNote).stream()
                     .filter(link -> link.getTargetNote().getId().equals(to.value())
                             && link.getRelationType().equals(relationType))
-                    .collect(Collectors.toList());
+                    .toList();
 
             for (LadybugNoteLink link : matching) {
                 dbRepository.deleteRelation(link);
@@ -108,21 +112,46 @@ public class LadybugMemoryNoteRepository implements MemoryNoteRepository {
     public List<NoteLink> findLinksFrom(MemoryNoteId id) {
         return dbRepository.findLinksFrom(id.value()).stream()
                 .map(this::toDomainLink)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public List<MemoryNote> findByTag(String tag) {
         return dbRepository.findByTag(tag).stream()
                 .map(note -> toDomainNoteWithLinks(note, note.getId()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public List<MemoryNote> findLinkedNotes(MemoryNoteId noteId) {
         return dbRepository.findLinkedNotes(noteId.value()).stream()
                 .map(note -> toDomainNoteWithLinks(note, note.getId()))
-                .collect(Collectors.toList());
+                .toList();
+    }
+
+    @Override
+    public List<MemoryNote> findLinkedNotes(MemoryNoteId noteId, String relationType, int limit) {
+        return dbRepository.findLinkedNotes(noteId.value(), relationType, limit).stream()
+            .map(note -> toDomainNoteWithLinks(note, note.getId()))
+            .toList();
+    }
+
+    @Override
+    public List<MemoryNote> findNotesUpward(MemoryNoteId noteId, int maxHops, int limit) {
+        String query = """
+            MATCH 
+                (n:MemoryNote)-[r:LINKED_TO* acyclic 1..%d]->(m:MemoryNote) 
+            WHERE
+                n.id = $noteId
+            RETURN 
+                DISTINCT m as n 
+            LIMIT
+             $limit    
+                """.formatted(maxHops);
+        return template.query(query, Map.of("noteId", noteId.value(), "limit", limit), LadybugMemoryNote.class)
+            .stream()
+            .map(note -> toDomainNoteWithLinks(note, note.getId()))
+            .toList();
     }
 
     @Override

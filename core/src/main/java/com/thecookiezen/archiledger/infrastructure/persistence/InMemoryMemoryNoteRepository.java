@@ -100,6 +100,44 @@ class InMemoryMemoryNoteRepository implements MemoryNoteRepository {
     }
 
     @Override
+    public List<MemoryNote> findLinkedNotes(MemoryNoteId noteId, String relationType, int limit) {
+        return links.stream()
+                .filter(link -> (link.from.equals(noteId) || link.to.equals(noteId))
+                        && link.relationType.equals(relationType))
+                .limit(limit)
+                .map(link -> link.from.equals(noteId) ? link.to : link.from)
+                .map(id -> notes.get(id))
+                .toList();
+    }
+
+    @Override
+    public List<MemoryNote> findNotesUpward(MemoryNoteId noteId, int maxHops, int limit) {
+        Set<MemoryNoteId> visited = new HashSet<>();
+        visited.add(noteId);
+        List<MemoryNoteId> current = List.of(noteId);
+        for (int hop = 0; hop < maxHops && !current.isEmpty(); hop++) {
+            List<MemoryNoteId> next = new ArrayList<>();
+            for (MemoryNoteId currentId : current) {
+                for (StoredLink link : links) {
+                    MemoryNoteId target = null;
+                    if (link.from.equals(currentId)) {
+                        target = link.to;
+                    } else if (link.to.equals(currentId)) {
+                        target = link.from;
+                    }
+                    if (target != null && !visited.contains(target)) {
+                        visited.add(target);
+                        next.add(target);
+                    }
+               }
+            }
+            current = next;
+        }
+        visited.remove(noteId);
+        return visited.stream().map(id -> notes.get(id)).limit(limit).toList();
+    }
+
+    @Override
     public Set<String> findAllTags() {
         return notes.values().stream()
                 .flatMap(note -> note.tags().stream())

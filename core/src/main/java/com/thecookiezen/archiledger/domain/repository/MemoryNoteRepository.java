@@ -29,6 +29,10 @@ public interface MemoryNoteRepository {
 
     List<MemoryNote> findLinkedNotes(MemoryNoteId noteId);
 
+    List<MemoryNote> findLinkedNotes(MemoryNoteId noteId, String relationType, int limit);
+
+    List<MemoryNote> findNotesUpward(MemoryNoteId noteId, int maxHops, int limit);
+
     Set<String> findAllTags();
 
     Map<String, Object> getGraph();
