@@ -43,6 +43,9 @@ public interface MemoryNoteDbRepository
         @Query("MATCH (e:NoteEmbedding {noteId: $noteId}) DETACH DELETE e")
         void deleteEmbedding(String noteId);
 
+        @Query("MATCH (ne:NoteEmbedding)-[r:HAS_EMBEDDING]-(mn:MemoryNote) DETACH DELETE mn, ne")
+        void deleteAllNotesWithEmbeddings();
+
         @Query(value = "MATCH (n:MemoryNote {id: $noteId}) CREATE (n)-[:HAS_EMBEDDING]->(e:NoteEmbedding {noteId: $noteId, embedding: $embedding})", loadExtensions = {
                         "vector" })
         void saveEmbedding(String noteId, float[] embedding);

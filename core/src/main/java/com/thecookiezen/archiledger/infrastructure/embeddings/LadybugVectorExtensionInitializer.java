@@ -40,6 +40,13 @@ public class LadybugVectorExtensionInitializer {
         }
     }
 
+    public void recreateIndex() {
+        try (Connection conn = new Connection(database)) {
+            loadExtension(conn);
+            createVectorIndex(conn);
+        }
+    }
+
     private void configureExtensionDirectory(Connection conn) {
         if (extensionDir != null && !extensionDir.isBlank()) {
             logger.info("Configuring LadybugDB home directory for extensions: {}", extensionDir);
@@ -60,6 +67,14 @@ public class LadybugVectorExtensionInitializer {
     }
 
     private void createVectorIndex(Connection conn) {
+        // Drop existing index first
+        try {
+            executeQuery(conn, "CALL DROP_VECTOR_INDEX('" + TABLE_NAME + "', '" + VECTOR_INDEX_NAME + "')");
+            logger.info("Dropped existing vector index");
+        } catch (Exception e) {
+            // Index didn't exist, ignore
+        }
+
         logger.info("Creating vector index '{}' on {}.{}...", VECTOR_INDEX_NAME, TABLE_NAME, EMBEDDING_PROPERTY);
         try (QueryResult result = conn.query(
                 "CALL CREATE_VECTOR_INDEX('" + TABLE_NAME + "', '" + VECTOR_INDEX_NAME + "', '"
