@@ -41,8 +41,8 @@ public class MemoryNoteSearchOperations implements VectorSearch, ResultExpander 
             return List.of();
         }
 
-        return memoryNoteService.similaritySearch(request.getQuery()).stream()
-            .limit(request.getTopK())
+        return memoryNoteService.similaritySearch(request.getQuery(), request.getTopK(), request.getSimilarityThreshold(), 0)
+            .stream()
             .map(result -> {
                 T retrievable = clazz.cast(new MemoryNoteRetrievable(result.item()));
                 return SimilarityResult.create(retrievable, result.score());
