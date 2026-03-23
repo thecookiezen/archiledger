@@ -3,7 +3,6 @@ package com.thecookiezen.archiledger.agenticmemory;
 import com.embabel.agent.api.annotation.AchievesGoal;
 import com.embabel.agent.api.annotation.Action;
 import com.embabel.agent.api.annotation.Agent;
-import com.embabel.agent.api.annotation.Export;
 import com.embabel.agent.api.common.Ai;
 import com.embabel.agent.rag.tools.ToolishRag;
 import com.thecookiezen.archiledger.agenticmemory.domain.EvolutionDecision;
@@ -76,12 +75,7 @@ public class AgenticMemoryAgent {
     }
 
     @Action
-    @AchievesGoal(description = "Store the request in agentic memory as memory note",
-        export = @Export(
-            remote = true,
-            name = "agentic-memory-write",
-            startingInputTypes = {UpsertMemoryRequest.class})
-    )
+    @AchievesGoal(description = "Store the request in agentic memory as memory note")
     public MemoryNote storeMemory(EvolutionDecision evolutionDecision, MemoryNote newNote, Ai ai) {
         var content = newNote.content();
         logger.info("Storing memory: {}...", content.substring(0, Math.min(50, content.length())));
