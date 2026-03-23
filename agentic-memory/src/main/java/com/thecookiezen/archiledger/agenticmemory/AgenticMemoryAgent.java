@@ -76,7 +76,7 @@ public class AgenticMemoryAgent {
 
     @Action
     @AchievesGoal(description = "Store the request in agentic memory as memory note")
-    public MemoryNote storeMemory(EvolutionDecision evolutionDecision, MemoryNote newNote, Ai ai) {
+    public MemoryNote storeMemory(EvolutionDecision evolutionDecision, MemoryNote newNote) {
         var content = newNote.content();
         logger.info("Storing memory: {}...", content.substring(0, Math.min(50, content.length())));
         
