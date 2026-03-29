@@ -244,7 +244,7 @@ docker run -p 8080:8080 \
   -e OPENAI_CUSTOM_BASE_URL=https://api.example.com \
   -e OPENAI_CUSTOM_MODELS=model-name \
   -e OPENAI_CUSTOM_API_KEY=your_api_key \
-  registry.hub.docker.com/thecookiezen/archiledger-agentic-memory-mcp:latest
+  registry.hub.docker.com/thecookiezen/archiledger-agentic-memory:latest
 ```
 
 **Persistent (Data saved to host filesystem):**
@@ -254,7 +254,7 @@ docker run -p 8080:8080 \
   -e OPENAI_CUSTOM_BASE_URL=https://api.example.com \
   -e OPENAI_CUSTOM_MODELS=model-name \
   -e OPENAI_CUSTOM_API_KEY=your_api_key \
-  registry.hub.docker.com/thecookiezen/archiledger-agentic-memory-mcp:latest
+  registry.hub.docker.com/thecookiezen/archiledger-agentic-memory:latest
 ```
 
 #### LLM Configuration Environment Variables
@@ -337,9 +337,38 @@ cors.match-origins=^http://localhost:\\d+$,^https://.*\\.my-company\\.com$
 
 Embeddings are stored using LadybugDB's native vector extension with HNSW indexing.
 
+### HNSW Index Configuration
+
+Tune the HNSW (Hierarchical Navigable Small World) index parameters for optimal performance:
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `ladybugdb.hnsw.mu` | `24` | Max degree Upper - lower = faster search, less memory |
+| `ladybugdb.hnsw.ml` | `48` | Max degree Lower - higher = better recall |
+| `ladybugdb.hnsw.pu` | `0.1` | Sampling rate for upper graph (10% = 1000 nodes from 10k) |
+| `ladybugdb.hnsw.efc` | `300` | Construction effort - higher = better index quality, slower indexing |
+| `ladybugdb.hnsw.metric` | `cosine` | Distance metric (`cosine`, `euclidean`, `dot_product`) |
+
+**Resource Estimates (10k records, 384-dim vectors):**
+
+| Resource | Estimate |
+|----------|----------|
+| Vector Storage | ~30.7 MB |
+| Index Overhead | ~3.8 MB |
+| Total RAM | ~35 MB |
+
 ### Embedding Model Configuration
 
 By default, Archiledger uses a local ONNX model (`all-MiniLM-L6-v2`, 384 dimensions) that requires no external API. You can customize the embedding model using environment variables.
+
+#### Model Comparison
+
+| Model | Dimensions | Quality (MTEB) | Speed | Best For |
+|-------|------------|----------------|-------|----------|
+| all-MiniLM-L6-v2 | 384 | ~57.8 | Fastest | Development, quick prototyping |
+| bge-small-en-v1.5 | 384 | ~62.0 | Fast | Production, better quality at same size |
+| all-mpnet-base-v2 | 768 | ~63.5 | Medium | Higher accuracy, nuanced semantics |
+| bge-large-en-v1.5 | 1024 | ~64.2 | Slowest | Maximum accuracy, cross-domain |
 
 #### Option 1: Custom HuggingFace ONNX Models
 
