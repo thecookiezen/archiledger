@@ -54,7 +54,7 @@ public class LadybugMemoryNoteRepository implements MemoryNoteRepository {
             addLink(new LinkDefinition(note.id(), link.target(), link.relationType(), link.context()));
         }
 
-        return toDomainNote(saved);
+        return toDomainNote(saved, note.links());
     }
 
     @Override
@@ -204,14 +204,14 @@ public class LadybugMemoryNoteRepository implements MemoryNoteRepository {
         return Math.exp(-distance / temperature);
     }
 
-    private MemoryNote toDomainNote(LadybugMemoryNote note) {
+    private MemoryNote toDomainNote(LadybugMemoryNote note, List<NoteLink> links) {
         return new MemoryNote(
                 new MemoryNoteId(note.getId()),
                 note.getContent(),
                 note.getKeywords(),
                 note.getContext(),
                 note.getTags(),
-                List.of(),
+                links,
                 note.getTimestamp(),
                 note.getRetrievalCount(),
                 null);
