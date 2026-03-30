@@ -11,7 +11,7 @@ ENV INITIAL_MEMORY=256m
 ENV MAX_MEMORY=512m
 ENV MAX_RAM_PERCENTAGE=75.0
 
-RUN groupadd -r spring && useradd -r -g spring -u 1000 spring
+RUN groupadd -r spring && useradd -r -g spring -u 101 spring
 
 # Create data and extension directories with proper permissions before switching user
 RUN mkdir -p /data/ladybugdb-extensions && chown -R spring:spring /data

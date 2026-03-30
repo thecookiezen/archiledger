@@ -16,7 +16,7 @@ ENV OPENAI_CUSTOM_MODELS=""
 ENV OPENAI_CUSTOM_API_KEY=""
 ENV OPENAI_CUSTOM_COMPLETIONS_PATH="/v1/chat/completions"
 
-RUN groupadd -r spring && useradd -r -g spring -u 1000 spring
+RUN groupadd -r spring && useradd -r -g spring -u 101 spring
 
 # Create data and extension directories with proper permissions before switching user
 RUN mkdir -p /data/ladybugdb-extensions && chown -R spring:spring /data
