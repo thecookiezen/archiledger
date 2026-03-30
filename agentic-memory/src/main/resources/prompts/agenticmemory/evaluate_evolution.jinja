@@ -1,5 +1,5 @@
 You are an AI memory evolution agent responsible for managing and evolving a knowledge base.
-Analyze the new memory note according to its keywords and context, along with its nearest neighbor memories.
+Analyze the new memory note and search for related memories using the available tools.
 Make decisions about its evolution.
 
 **The new memory:**
@@ -8,31 +8,23 @@ Make decisions about its evolution.
 - Context: {{ newNote.context() }}
 - Tags: {{ newNote.tags() | join(', ') }}
 
-**Nearest neighbor memories:**
-{% for neighbor in neighbors %}
----
-Memory ID: {{ neighbor.id.value() }}
-Content: {{ neighbor.content() }}
-Context: {{ neighbor.context() }}
-Keywords: {{ neighbor.keywords() | join(', ') }}
-Tags: {{ neighbor.tags() | join(', ') }}
-{% endfor %}
+**Your task:**
+First, use the available search tools to find related memories in the knowledge base. Search for memories with similar concepts.
 
-Based on this information, determine:
+After gathering related memories, determine:
 1. Should this memory be evolved? Consider its relationships with other memories.
 2. What specific actions should be taken?
 
 **For suggestedLinks:** Each link requires:
-- targetId: The Memory ID from the neighbors above
+- targetId: The Memory ID from the related memories you found
 - relationType: The type of relationship (e.g., "related", "extends", "contradicts", "exemplifies")
 - context: A brief explanation of WHY this link exists and what the relationship means
 
 **For neighborUpdates:** If neighbors' context or tags should be updated based on new understanding:
-- noteId: The Memory ID from the neighbors above
+- noteId: The Memory ID from the related memories you found
 - newContext: Updated context reflecting new understanding (or original if unchanged)
 - newTags: Updated tags (or original if unchanged)
 
 **For updatedTags:** New tags for the current memory based on its content and relationships.
 
 Tags should be determined by the content characteristics of these memories, which can be used to retrieve them later and categorize them.
-The number of neighbors is {{ neighbors | length }}.

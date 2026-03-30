@@ -46,7 +46,7 @@ public class LadybugDBConfig {
     @Value("${ladybugdb.pool.min-idle:2}")
     private int poolMinIdle;
 
-    @Value("${ladybugdb.data-dir:}")
+    @Value("${ladybugdb.data-path:}")
     private String dataDir;
 
     @Value("${ladybugdb.embeddingDimensions:384}")

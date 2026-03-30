@@ -27,19 +27,19 @@ Embeddings are stored using LadybugDB's native vector extension with HNSW indexi
 
 See xref:configuration/embedding-models.adoc[Embedding Model Configuration] for customizing the embedding model.
 
-==== Data Directory
+==== Data Path
 
-Set the data directory for persistent storage:
+Set the data path for persistent storage:
 
 [source,bash]
 ----
-java -Dladybugdb.data-dir=./ladybugdb-data -jar archiledger-server.jar
+java -Dladybugdb.data-path=./archiledger.lbdb -jar archiledger-server.jar
 ----
 
 Or using environment variable:
 
 [source,bash]
 ----
-export LADYBUGDB_DATA_DIR=/path/to/data
+export LADYBUGDB_DATA_PATH=/path/to/archiledger.lbdb
 java -jar archiledger-server.jar
 ----

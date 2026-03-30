@@ -36,7 +36,7 @@ public class AgenticMemoryMcpTools {
             @ToolParam(description = "Minimum similarity threshold (0.0 to 1.0)", required = false) Double threshold) {
         
         int limit = topK != null ? topK : 10;
-        double simThreshold = threshold != null ? threshold : 0.5;
+        double simThreshold = threshold != null ? threshold : 0.0;
         
         return searchOperations.vectorSearch(TextSimilaritySearchRequest.create(query, simThreshold, limit), MemoryNoteRetrievable.class)
             .stream()
