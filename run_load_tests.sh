@@ -26,7 +26,7 @@ run_scenario() {
     --logging.level.root=ERROR \
     --logging.level.com.thecookiezen.archiledger.loadtests=INFO \
     --spring.profiles.active=ladybugdb \
-    --ladybugdb.data-dir=/tmp/$SCENARIO_NAME \
+    --ladybugdb.data-path=/tmp/$SCENARIO_NAME \
     --loadtest.scenario.name="$SCENARIO_NAME" \
     --loadtest.note-count=$ENTITIES \
     --loadtest.links-per-note=$RELATIONS \

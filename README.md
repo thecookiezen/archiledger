@@ -189,7 +189,7 @@ java -jar mcp/target/archiledger-server-1.0.0-SNAPSHOT.jar
 
 **Persistent:**
 ```bash
-java -Dladybugdb.data-dir=./ladybugdb-data \
+java -Dladybugdb.data-path=./archiledger.lbdb \
      -jar mcp/target/archiledger-server-1.0.0-SNAPSHOT.jar
 ```
 
@@ -204,7 +204,7 @@ java -jar agentic-memory-mcp/target/agentic-memory-mcp-1.0.0-SNAPSHOT.jar
 
 **Persistent:**
 ```bash
-java -Dladybugdb.data-dir=./ladybugdb-data \
+java -Dladybugdb.data-path=./archiledger.lbdb \
      -jar agentic-memory-mcp/target/agentic-memory-mcp-1.0.0-SNAPSHOT.jar
 ```
 
@@ -217,22 +217,23 @@ docker run -p 8080:8080 registry.hub.docker.com/thecookiezen/archiledger:latest
 
 **Persistent (Data saved to host filesystem):**
 ```bash
-docker run -p 8080:8080 -v /path/to/local/ladybugdb-data:/data/ladybugdb registry.hub.docker.com/thecookiezen/archiledger:latest
+docker run -p 8080:8080 -v /path/to/local/data:/data registry.hub.docker.com/thecookiezen/archiledger:latest
 ```
 
 **Custom data directory:**
 ```bash
 docker run -p 8080:8080 \
-  -e LADYBUGDB_DATA_DIR=/custom/data/path \
-  -v /path/to/local/data:/custom/data/path \
+  -e LADYBUGDB_DATA_PATH=/custom/data/archiledger.lbdb \
+  -v /path/to/local/data:/custom/data \
   registry.hub.docker.com/thecookiezen/archiledger:latest
 ```
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LADYBUGDB_DATA_DIR` | `/data/ladybugdb` | Directory where LadybugDB stores data |
+| `LADYBUGDB_DATA_PATH` | `/data/archiledger.lbdb` | File path where LadybugDB stores data |
+| `LADYBUGDB_EXTENSION_DIR` | `/data/ladybugdb-extensions` | Directory for LadybugDB extension cache |
 
-> **Note:** The data directory must be writable by UID 100 (`spring` user).
+> **Note:** The `/data` volume must be writable by UID 1000 (`spring` user).
 
 ### Running Agentic Memory MCP with Docker
 
@@ -244,17 +245,17 @@ docker run -p 8080:8080 \
   -e OPENAI_CUSTOM_BASE_URL=https://api.example.com \
   -e OPENAI_CUSTOM_MODELS=model-name \
   -e OPENAI_CUSTOM_API_KEY=your_api_key \
-  registry.hub.docker.com/thecookiezen/archiledger-agentic-memory-mcp:latest
+  registry.hub.docker.com/thecookiezen/archiledger-agentic-memory:latest
 ```
 
 **Persistent (Data saved to host filesystem):**
 ```bash
 docker run -p 8080:8080 \
-  -v /path/to/local/ladybugdb-data:/data/ladybugdb \
+  -v /path/to/local/data:/data \
   -e OPENAI_CUSTOM_BASE_URL=https://api.example.com \
   -e OPENAI_CUSTOM_MODELS=model-name \
   -e OPENAI_CUSTOM_API_KEY=your_api_key \
-  registry.hub.docker.com/thecookiezen/archiledger-agentic-memory-mcp:latest
+  registry.hub.docker.com/thecookiezen/archiledger-agentic-memory:latest
 ```
 
 #### LLM Configuration Environment Variables
@@ -270,12 +271,13 @@ docker run -p 8080:8080 \
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LADYBUGDB_DATA_DIR` | `/data/ladybugdb` | Directory where LadybugDB stores data |
+| `LADYBUGDB_DATA_PATH` | `/data/archiledger.lbdb` | File path where LadybugDB stores data |
+| `LADYBUGDB_EXTENSION_DIR` | `/data/ladybugdb-extensions` | Directory for LadybugDB extension cache |
 | `INITIAL_MEMORY` | `256m` | JVM initial heap size |
 | `MAX_MEMORY` | `512m` | JVM maximum heap size |
 | `MAX_RAM_PERCENTAGE` | `75.0` | JVM max RAM percentage |
 
-> **Note:** The data directory must be writable by UID 100 (`spring` user).
+> **Note:** The `/data` volume must be writable by UID 1000 (`spring` user).
 
 ### Visualizing the Graph
 
@@ -337,9 +339,38 @@ cors.match-origins=^http://localhost:\\d+$,^https://.*\\.my-company\\.com$
 
 Embeddings are stored using LadybugDB's native vector extension with HNSW indexing.
 
+### HNSW Index Configuration
+
+Tune the HNSW (Hierarchical Navigable Small World) index parameters for optimal performance:
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `ladybugdb.hnsw.mu` | `24` | Max degree Upper - lower = faster search, less memory |
+| `ladybugdb.hnsw.ml` | `48` | Max degree Lower - higher = better recall |
+| `ladybugdb.hnsw.pu` | `0.1` | Sampling rate for upper graph (10% = 1000 nodes from 10k) |
+| `ladybugdb.hnsw.efc` | `300` | Construction effort - higher = better index quality, slower indexing |
+| `ladybugdb.hnsw.metric` | `cosine` | Distance metric (`cosine`, `euclidean`, `dot_product`) |
+
+**Resource Estimates (10k records, 384-dim vectors):**
+
+| Resource | Estimate |
+|----------|----------|
+| Vector Storage | ~30.7 MB |
+| Index Overhead | ~3.8 MB |
+| Total RAM | ~35 MB |
+
 ### Embedding Model Configuration
 
 By default, Archiledger uses a local ONNX model (`all-MiniLM-L6-v2`, 384 dimensions) that requires no external API. You can customize the embedding model using environment variables.
+
+#### Model Comparison
+
+| Model | Dimensions | Quality (MTEB) | Speed | Best For |
+|-------|------------|----------------|-------|----------|
+| all-MiniLM-L6-v2 | 384 | ~57.8 | Fastest | Development, quick prototyping |
+| bge-small-en-v1.5 | 384 | ~62.0 | Fast | Production, better quality at same size |
+| all-mpnet-base-v2 | 768 | ~63.5 | Medium | Higher accuracy, nuanced semantics |
+| bge-large-en-v1.5 | 1024 | ~64.2 | Slowest | Maximum accuracy, cross-domain |
 
 #### Option 1: Custom HuggingFace ONNX Models
 

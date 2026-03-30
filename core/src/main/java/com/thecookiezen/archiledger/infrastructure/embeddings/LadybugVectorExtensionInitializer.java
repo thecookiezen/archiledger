@@ -24,6 +24,21 @@ public class LadybugVectorExtensionInitializer {
     @Value("${ladybugdb.extension-dir:}")
     private String extensionDir;
 
+    @Value("${ladybugdb.hnsw.mu:30}")
+    private int hnswMu;
+
+    @Value("${ladybugdb.hnsw.ml:60}")
+    private int hnswMl;
+
+    @Value("${ladybugdb.hnsw.pu:0.1}")
+    private double hnswPu;
+
+    @Value("${ladybugdb.hnsw.efc:300}")
+    private int hnswEfc;
+
+    @Value("${ladybugdb.hnsw.metric:cosine}")
+    private String hnswMetric;
+
     public LadybugVectorExtensionInitializer(Database database) {
         this.database = database;
     }
@@ -67,20 +82,22 @@ public class LadybugVectorExtensionInitializer {
     }
 
     private void createVectorIndex(Connection conn) {
-        // Drop existing index first
         try {
             executeQuery(conn, "CALL DROP_VECTOR_INDEX('" + TABLE_NAME + "', '" + VECTOR_INDEX_NAME + "')");
             logger.info("Dropped existing vector index");
         } catch (Exception e) {
-            // Index didn't exist, ignore
         }
 
-        logger.info("Creating vector index '{}' on {}.{}...", VECTOR_INDEX_NAME, TABLE_NAME, EMBEDDING_PROPERTY);
-        try (QueryResult result = conn.query(
-                "CALL CREATE_VECTOR_INDEX('" + TABLE_NAME + "', '" + VECTOR_INDEX_NAME + "', '"
-                        + EMBEDDING_PROPERTY + "', metric := 'cosine')")) {
+        logger.info("Creating HNSW vector index '{}' on {}.{} with mu={}, ml={}, pu={}, efc={}, metric={}",
+                VECTOR_INDEX_NAME, TABLE_NAME, EMBEDDING_PROPERTY, hnswMu, hnswMl, hnswPu, hnswEfc, hnswMetric);
+        
+        String indexQuery = String.format(
+                "CALL CREATE_VECTOR_INDEX('%s', '%s', '%s', metric := '%s', mu := %d, ml := %d, pu := %.2f, efc := %d)",
+                TABLE_NAME, VECTOR_INDEX_NAME, EMBEDDING_PROPERTY, hnswMetric, hnswMu, hnswMl, hnswPu, hnswEfc);
+        
+        try (QueryResult result = conn.query(indexQuery)) {
             if (result.isSuccess()) {
-                logger.info("Vector index '{}' created successfully", VECTOR_INDEX_NAME);
+                logger.info("Vector index '{}' created successfully with HNSW parameters", VECTOR_INDEX_NAME);
             } else {
                 String error = result.getErrorMessage();
                 if (error != null && error.contains("already exists")) {
