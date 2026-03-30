@@ -52,6 +52,9 @@ public class LadybugDBConfig {
     @Value("${ladybugdb.embeddingDimensions:384}")
     private int embeddingDimensions;
 
+    @Value("${ladybugdb.extension-dir:}")
+    private String extensionDir;
+
     @Bean(destroyMethod = "close")
     public Database database() {
         Database db;
@@ -113,7 +116,7 @@ public class LadybugDBConfig {
 
     @Bean(destroyMethod = "close")
     public LadybugDBConnectionFactory connectionFactory(Database database) {
-        return new PooledConnectionFactory(database);
+        return new PooledConnectionFactory(database, extensionDir);
     }
 
     @Bean
