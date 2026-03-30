@@ -44,7 +44,7 @@ Start the MCP server:
 java -jar mcp/target/archiledger-server-1.0.0-SNAPSHOT.jar
 
 # Persistent
-java -Dladybugdb.data-dir=./archiledger.lbdb \
+java -Dladybugdb.data-path=./archiledger.lbdb \
      -jar mcp/target/archiledger-server-1.0.0-SNAPSHOT.jar
 ----
 

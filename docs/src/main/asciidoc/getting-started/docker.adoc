@@ -21,7 +21,7 @@ docker run -p 8080:8080 \
 [source,bash]
 ----
 docker run -p 8080:8080 \
-  -e LADYBUGDB_DATA_DIR=/custom/data/archiledger.lbdb \
+  -e LADYBUGDB_DATA_PATH=/custom/data/archiledger.lbdb \
   -v /path/to/local/data:/custom/data \
   registry.hub.docker.com/thecookiezen/archiledger:latest
 ----
@@ -57,7 +57,7 @@ docker run -p 8080:8080 \
 |===
 | Variable | Default | Description
 
-| `LADYBUGDB_DATA_DIR`
+| `LADYBUGDB_DATA_PATH`
 | `/data/archiledger.lbdb`
 | File path where LadybugDB stores data
 

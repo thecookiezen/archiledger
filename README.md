@@ -189,7 +189,7 @@ java -jar mcp/target/archiledger-server-1.0.0-SNAPSHOT.jar
 
 **Persistent:**
 ```bash
-java -Dladybugdb.data-dir=./archiledger.lbdb \
+java -Dladybugdb.data-path=./archiledger.lbdb \
      -jar mcp/target/archiledger-server-1.0.0-SNAPSHOT.jar
 ```
 
@@ -204,7 +204,7 @@ java -jar agentic-memory-mcp/target/agentic-memory-mcp-1.0.0-SNAPSHOT.jar
 
 **Persistent:**
 ```bash
-java -Dladybugdb.data-dir=./archiledger.lbdb \
+java -Dladybugdb.data-path=./archiledger.lbdb \
      -jar agentic-memory-mcp/target/agentic-memory-mcp-1.0.0-SNAPSHOT.jar
 ```
 
@@ -223,14 +223,14 @@ docker run -p 8080:8080 -v /path/to/local/data:/data registry.hub.docker.com/the
 **Custom data directory:**
 ```bash
 docker run -p 8080:8080 \
-  -e LADYBUGDB_DATA_DIR=/custom/data/archiledger.lbdb \
+  -e LADYBUGDB_DATA_PATH=/custom/data/archiledger.lbdb \
   -v /path/to/local/data:/custom/data \
   registry.hub.docker.com/thecookiezen/archiledger:latest
 ```
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LADYBUGDB_DATA_DIR` | `/data/archiledger.lbdb` | File path where LadybugDB stores data |
+| `LADYBUGDB_DATA_PATH` | `/data/archiledger.lbdb` | File path where LadybugDB stores data |
 | `LADYBUGDB_EXTENSION_DIR` | `/data/ladybugdb-extensions` | Directory for LadybugDB extension cache |
 
 > **Note:** The `/data` volume must be writable by UID 1000 (`spring` user).
@@ -271,7 +271,7 @@ docker run -p 8080:8080 \
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LADYBUGDB_DATA_DIR` | `/data/archiledger.lbdb` | File path where LadybugDB stores data |
+| `LADYBUGDB_DATA_PATH` | `/data/archiledger.lbdb` | File path where LadybugDB stores data |
 | `LADYBUGDB_EXTENSION_DIR` | `/data/ladybugdb-extensions` | Directory for LadybugDB extension cache |
 | `INITIAL_MEMORY` | `256m` | JVM initial heap size |
 | `MAX_MEMORY` | `512m` | JVM maximum heap size |

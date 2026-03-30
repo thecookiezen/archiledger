@@ -11,7 +11,7 @@ The MCP module exposes all core operations as MCP tools for LLM-based assistants
 java -jar mcp/target/archiledger-server-1.0.0-SNAPSHOT.jar
 
 # Persistent
-java -Dladybugdb.data-dir=./archiledger.lbdb \
+java -Dladybugdb.data-path=./archiledger.lbdb \
      -jar mcp/target/archiledger-server-1.0.0-SNAPSHOT.jar
 ----
 
