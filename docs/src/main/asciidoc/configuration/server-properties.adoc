@@ -33,13 +33,13 @@ Set the data directory for persistent storage:
 
 [source,bash]
 ----
-java -Dladybugdb.data-dir=./ladybugdb-data -jar archiledger-server.jar
+java -Dladybugdb.data-dir=./archiledger.lbdb -jar archiledger-server.jar
 ----
 
 Or using environment variable:
 
 [source,bash]
 ----
-export LADYBUGDB_DATA_DIR=/path/to/data
+export LADYBUGDB_DATA_DIR=/path/to/archiledger.lbdb
 java -jar archiledger-server.jar
 ----

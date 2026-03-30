@@ -26,7 +26,7 @@ The agentic memory module is built on the https://github.com/embabel/embabel-age
 java -jar agentic-memory-mcp/target/agentic-memory-mcp-0.0.6.jar
 
 # Persistent
-java -Dladybugdb.data-dir=./ladybugdb-data \
+java -Dladybugdb.data-dir=./archiledger.lbdb \
      -jar agentic-memory-mcp/target/agentic-memory-mcp-0.0.6.jar
 ----
 

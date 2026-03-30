@@ -189,7 +189,7 @@ java -jar mcp/target/archiledger-server-1.0.0-SNAPSHOT.jar
 
 **Persistent:**
 ```bash
-java -Dladybugdb.data-dir=./ladybugdb-data \
+java -Dladybugdb.data-dir=./archiledger.lbdb \
      -jar mcp/target/archiledger-server-1.0.0-SNAPSHOT.jar
 ```
 
@@ -204,7 +204,7 @@ java -jar agentic-memory-mcp/target/agentic-memory-mcp-1.0.0-SNAPSHOT.jar
 
 **Persistent:**
 ```bash
-java -Dladybugdb.data-dir=./ladybugdb-data \
+java -Dladybugdb.data-dir=./archiledger.lbdb \
      -jar agentic-memory-mcp/target/agentic-memory-mcp-1.0.0-SNAPSHOT.jar
 ```
 
@@ -217,22 +217,23 @@ docker run -p 8080:8080 registry.hub.docker.com/thecookiezen/archiledger:latest
 
 **Persistent (Data saved to host filesystem):**
 ```bash
-docker run -p 8080:8080 -v /path/to/local/ladybugdb-data:/data/ladybugdb registry.hub.docker.com/thecookiezen/archiledger:latest
+docker run -p 8080:8080 -v /path/to/local/data:/data registry.hub.docker.com/thecookiezen/archiledger:latest
 ```
 
 **Custom data directory:**
 ```bash
 docker run -p 8080:8080 \
-  -e LADYBUGDB_DATA_DIR=/custom/data/path \
-  -v /path/to/local/data:/custom/data/path \
+  -e LADYBUGDB_DATA_DIR=/custom/data/archiledger.lbdb \
+  -v /path/to/local/data:/custom/data \
   registry.hub.docker.com/thecookiezen/archiledger:latest
 ```
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LADYBUGDB_DATA_DIR` | `/data/ladybugdb` | Directory where LadybugDB stores data |
+| `LADYBUGDB_DATA_DIR` | `/data/archiledger.lbdb` | File path where LadybugDB stores data |
+| `LADYBUGDB_EXTENSION_DIR` | `/data/ladybugdb-extensions` | Directory for LadybugDB extension cache |
 
-> **Note:** The data directory must be writable by UID 100 (`spring` user).
+> **Note:** The `/data` volume must be writable by UID 1000 (`spring` user).
 
 ### Running Agentic Memory MCP with Docker
 
@@ -250,7 +251,7 @@ docker run -p 8080:8080 \
 **Persistent (Data saved to host filesystem):**
 ```bash
 docker run -p 8080:8080 \
-  -v /path/to/local/ladybugdb-data:/data/ladybugdb \
+  -v /path/to/local/data:/data \
   -e OPENAI_CUSTOM_BASE_URL=https://api.example.com \
   -e OPENAI_CUSTOM_MODELS=model-name \
   -e OPENAI_CUSTOM_API_KEY=your_api_key \
@@ -270,12 +271,13 @@ docker run -p 8080:8080 \
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LADYBUGDB_DATA_DIR` | `/data/ladybugdb` | Directory where LadybugDB stores data |
+| `LADYBUGDB_DATA_DIR` | `/data/archiledger.lbdb` | File path where LadybugDB stores data |
+| `LADYBUGDB_EXTENSION_DIR` | `/data/ladybugdb-extensions` | Directory for LadybugDB extension cache |
 | `INITIAL_MEMORY` | `256m` | JVM initial heap size |
 | `MAX_MEMORY` | `512m` | JVM maximum heap size |
 | `MAX_RAM_PERCENTAGE` | `75.0` | JVM max RAM percentage |
 
-> **Note:** The data directory must be writable by UID 100 (`spring` user).
+> **Note:** The `/data` volume must be writable by UID 1000 (`spring` user).
 
 ### Visualizing the Graph
 

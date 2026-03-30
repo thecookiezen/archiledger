@@ -1,33 +1,29 @@
-FROM eclipse-temurin:21-jre-alpine-3.23
+FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
-# Default data directory for LadybugDB persistence
-ENV LADYBUGDB_DATA_DIR=/data/ladybugdb
-# Default JVM memory settings
+ENV LADYBUGDB_DATA_DIR=/data/archiledger.lbdb
+ENV LADYBUGDB_EXTENSION_DIR=/data/ladybugdb-extensions
 ENV INITIAL_MEMORY=256m
 ENV MAX_MEMORY=512m
 ENV MAX_RAM_PERCENTAGE=75.0
 
-RUN addgroup -S spring && adduser -S spring -G spring
-
-# Create data directory with proper permissions before switching user
-RUN mkdir -p /data/ladybugdb && chown -R spring:spring /data
+RUN groupadd -r spring && useradd -r -g spring -u 1000 spring
+RUN mkdir -p /data/ladybugdb-extensions && chown -R spring:spring /data
 
 USER spring:spring
 
 COPY mcp/target/*.jar app.jar
 
-# HTTP server port
 EXPOSE 8080
 
-# Volume mount point for LadybugDB data
-VOLUME ["/data/ladybugdb"]
+VOLUME ["/data"]
 
 ENTRYPOINT ["sh", "-c", "java \
     -Xms${INITIAL_MEMORY} \
     -Xmx${MAX_MEMORY} \
     -XX:MaxRAMPercentage=${MAX_RAM_PERCENTAGE} \
     -Dladybugdb.data-dir=${LADYBUGDB_DATA_DIR} \
+    -Dladybugdb.extension-dir=${LADYBUGDB_EXTENSION_DIR} \
     -jar \
     app.jar"]
