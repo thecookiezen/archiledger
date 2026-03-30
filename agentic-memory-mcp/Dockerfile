@@ -31,7 +31,7 @@ EXPOSE 8080
 # Volume mount point for LadybugDB data
 VOLUME ["/data"]
 
-ENTRYPOINT ["sh", "-c", "java \
+ENTRYPOINT ["sh", "-c", "exec java \
     -Xms${INITIAL_MEMORY} \
     -Xmx${MAX_MEMORY} \
     -XX:MaxRAMPercentage=${MAX_RAM_PERCENTAGE} \
