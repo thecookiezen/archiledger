@@ -13,6 +13,7 @@ import com.thecookiezen.archiledger.domain.model.SimilarityResult;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -22,11 +23,14 @@ public class AgenticMemoryMcpTools {
 
     private final MemoryNoteSearchOperations searchOperations;
     private final AgentPlatform agentPlatform;
+    private final boolean debugEnabled;
 
     public AgenticMemoryMcpTools(@Qualifier("archiledgerSearchOperations") MemoryNoteSearchOperations searchOperations,
-        AgentPlatform agentPlatform) {
+        AgentPlatform agentPlatform,
+        @Value("${agentic-memory.debug:false}") boolean debugEnabled) {
         this.searchOperations = searchOperations;
         this.agentPlatform = agentPlatform;
+        this.debugEnabled = debugEnabled;
     }
 
     @Tool(name = "memory_vector_search", description = "Perform semantic similarity search across memory notes. Returns the most relevant notes based on vector embeddings of their content.")
@@ -72,13 +76,17 @@ public class AgenticMemoryMcpTools {
 
     @Tool(name = "agentic_memory_write", description = "Store content in agentic memory as a memory note. Creates a basic note with the provided content and optional tags.")
     public MemoryNote writeMemory(@ToolParam(description = "The content to store in memory") String content) {
+        ProcessOptions options = new ProcessOptions();
+        if (debugEnabled) {
+            options = options.withVerbosity(new Verbosity()
+                .withShowPrompts(true)
+                .withShowLlmResponses(true)
+                .withDebug(true));
+        }
+
          var invocation = AgentInvocation
             .builder(agentPlatform)
-            .options(new ProcessOptions()
-                .withVerbosity(new Verbosity()
-                    .withShowPrompts(true)
-                    .withShowLlmResponses(true)
-                    .withDebug(true)))
+            .options(options)
             .build(MemoryNote.class);
 
         return invocation.invoke(new UpsertMemoryRequest(content));

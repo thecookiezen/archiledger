@@ -44,6 +44,34 @@ export OPENAI_CUSTOM_API_KEY=your_api_key
 export OPENAI_CUSTOM_COMPLETIONS_PATH=/v4/chat/completion
 ----
 
+==== Debug Configuration
+
+Enable debug mode to see the agent's internal prompts and LLM responses when writing memories:
+
+[source,properties]
+----
+agentic-memory.debug=true
+----
+
+Or using environment variable:
+
+[source,bash]
+----
+export AGENTIC_MEMORY_DEBUG=true
+java -jar agentic-memory-mcp/target/agentic-memory-mcp-0.0.6.jar
+----
+
+When enabled, the `agentic_memory_write` tool will log the prompts sent to the LLM and the raw responses received. This is useful for troubleshooting agent behaviour or understanding how content is being classified.
+
+[cols="2,1,2"]
+|===
+| Property | Default | Description
+
+| `agentic-memory.debug`
+| `false`
+| Enable verbose logging of LLM prompts and responses during memory writes
+|===
+
 ==== Agentic Memory MCP Tools
 
 [cols="1,3"]
