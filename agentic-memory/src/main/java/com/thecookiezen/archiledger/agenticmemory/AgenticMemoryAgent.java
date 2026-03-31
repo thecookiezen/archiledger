@@ -5,6 +5,7 @@ import com.embabel.agent.api.annotation.Action;
 import com.embabel.agent.api.annotation.Agent;
 import com.embabel.agent.api.common.Ai;
 import com.embabel.agent.rag.tools.ToolishRag;
+import com.thecookiezen.archiledger.agenticmemory.rag.FinalIterationWarningTransformer;
 import com.thecookiezen.archiledger.agenticmemory.domain.EvolutionDecision;
 import com.thecookiezen.archiledger.agenticmemory.domain.NeighborUpdate;
 import com.thecookiezen.archiledger.agenticmemory.domain.NoteAnalysis;
@@ -31,10 +32,12 @@ public class AgenticMemoryAgent {
     private final AgenticMemoryProperties properties;
     private final MemoryNoteService memoryNoteService;
     private final ToolishRag memoryRag;
+    private final FinalIterationWarningTransformer iterationWarningTransformer;
 
     public AgenticMemoryAgent(AgenticMemoryProperties properties, MemoryNoteService memoryNoteService, MemoryNoteSearchOperations memoryNoteSearchOperations) {
         this.properties = properties;
         this.memoryNoteService = memoryNoteService;
+        this.iterationWarningTransformer = new FinalIterationWarningTransformer(properties.maxToolIterations());
         this.memoryRag = new ToolishRag("memory-notes", "Historical memories for finding related content and establishing connections",
                 memoryNoteSearchOperations)
             .withSearchFor(List.of(MemoryNoteRetrievable.class));
@@ -67,6 +70,7 @@ public class AgenticMemoryAgent {
     EvolutionDecision evaluateEvolution(MemoryNote newNote, Ai ai) {
         EvolutionDecision evolutionDecision = ai.withLlm(properties.chatLlm())
             .withReference(memoryRag)
+            .withToolLoopTransformers(iterationWarningTransformer)
             .rendering("agenticmemory/evaluate_evolution")
             .createObject(EvolutionDecision.class, Map.of("newNote", newNote));
 

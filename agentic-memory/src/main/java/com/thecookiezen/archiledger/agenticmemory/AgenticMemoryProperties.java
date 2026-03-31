@@ -7,11 +7,15 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
 @ConfigurationProperties(prefix = "agenticmemory")
 public record AgenticMemoryProperties(
     @NestedConfigurationProperty LlmOptions chatLlm,
-    int neighborsK
+    int neighborsK,
+    int maxToolIterations
 ) {
     public AgenticMemoryProperties {
         if (neighborsK <= 0) {
             neighborsK = 5;
+        }
+        if (maxToolIterations <= 0) {
+            maxToolIterations = 5;
         }
     }
 }

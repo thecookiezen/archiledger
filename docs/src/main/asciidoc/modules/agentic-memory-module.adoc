@@ -70,6 +70,14 @@ When enabled, the `agentic_memory_write` tool will log the prompts sent to the L
 | `agentic-memory.debug`
 | `false`
 | Enable verbose logging of LLM prompts and responses during memory writes
+
+| `agentic-memory.max-tool-iterations`
+| `5`
+| Maximum number of tool-loop iterations the agent may perform. When this limit is reached a system message is injected instructing the LLM to stop calling tools and return its best answer.
+
+| `agentic-memory.neighbors-k`
+| `5`
+| Number of nearest-neighbour notes to consider when establishing links between memories
 |===
 
 ==== Agentic Memory MCP Tools
