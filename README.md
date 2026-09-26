@@ -349,7 +349,7 @@ Tune the HNSW (Hierarchical Navigable Small World) index parameters for optimal 
 | `ladybugdb.hnsw.ml` | `48` | Max degree Lower - higher = better recall |
 | `ladybugdb.hnsw.pu` | `0.1` | Sampling rate for upper graph (10% = 1000 nodes from 10k) |
 | `ladybugdb.hnsw.efc` | `300` | Construction effort - higher = better index quality, slower indexing |
-| `ladybugdb.hnsw.metric` | `cosine` | Distance metric (`cosine`, `euclidean`, `dot_product`) |
+| `ladybugdb.hnsw.metric` | `cosine` | Distance metric (`cosine`, `l2`, `l2sq`, `dotproduct`, `ip`) |
 
 **Resource Estimates (10k records, 384-dim vectors):**
 
