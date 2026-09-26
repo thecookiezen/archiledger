@@ -359,6 +359,12 @@ Tune the HNSW (Hierarchical Navigable Small World) index parameters for optimal 
 | Index Overhead | ~3.8 MB |
 | Total RAM | ~35 MB |
 
+#### Index Maintenance
+
+Embedding updates are applied in place with a single `SET` on the indexed vector property (supported on a live HNSW index since LadybugDB 0.18), so re-saving a note no longer deletes and recreates its embedding node. Repeated updates do not degrade correctness.
+
+HNSW does accumulate dead edges over many updates and deletes, which slowly reduces recall and wastes memory. For write-heavy workloads, schedule a periodic index rebuild — a DROP + CREATE maintenance operation available via `LadybugVectorExtensionInitializer#recreateIndex()`. This is routine maintenance, not a correctness fix.
+
 ### Embedding Model Configuration
 
 By default, Archiledger uses a local ONNX model (`all-MiniLM-L6-v2`, 384 dimensions) that requires no external API. You can customize the embedding model using environment variables.
