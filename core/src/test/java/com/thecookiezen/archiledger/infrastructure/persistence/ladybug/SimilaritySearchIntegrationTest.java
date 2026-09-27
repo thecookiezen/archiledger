@@ -5,7 +5,6 @@ import com.thecookiezen.archiledger.domain.model.MemoryNoteId;
 import com.thecookiezen.archiledger.domain.model.SimilarityResult;
 import com.thecookiezen.archiledger.domain.repository.EmbeddingsService;
 import com.thecookiezen.archiledger.infrastructure.config.LadybugDBConfig;
-import com.thecookiezen.archiledger.infrastructure.embeddings.LadybugVectorExtensionInitializer;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.LadybugMemoryNoteRepository;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.MemoryNoteDbRepository;
 
@@ -55,13 +54,9 @@ class SimilaritySearchIntegrationTest {
     @Autowired
     private EmbeddingsService embeddingsService;
 
-    @Autowired
-    private LadybugVectorExtensionInitializer vectorExtensionInitializer;
-
     @BeforeEach
     void cleanDatabase() {
         dbRepository.deleteAllNotes();
-        vectorExtensionInitializer.recreateIndex();
     }
 
     @Test
