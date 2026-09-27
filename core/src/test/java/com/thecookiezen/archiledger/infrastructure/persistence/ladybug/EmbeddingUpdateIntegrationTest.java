@@ -37,8 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Integration tests for save-time updates of the indexed note embedding.
  * <p>
  * Saving an existing note must SET the vector on the live HNSW index
- * (supported since LadybugDB 0.18.0) instead of delete+recreating the
- * {@code NoteEmbedding} node: the new vector must immediately be visible
+ * (supported since LadybugDB 0.18.0) instead of rewriting it on every save:
+ * the new vector must immediately be visible
  * to KNN search, the old position must disappear, repeated updates must
  * never surface stale rows, and everything must survive a checkpoint and
  * reopen.
@@ -114,9 +114,11 @@ class EmbeddingUpdateIntegrationTest {
         repository.save(note("r2", "GraphQL flexible query language").withEmbedding(basis(11)));
         repository.save(note("r3", "Chocolate cake baking recipe").withEmbedding(basis(12)));
 
-        repository.save(note("r2", "GraphQL flexible query language").withEmbedding(basis(13)));
-        repository.save(note("r2", "GraphQL flexible query language").withEmbedding(basis(14)));
-        repository.save(note("r2", "GraphQL flexible query language").withEmbedding(basis(15)));
+        // Each re-embed accompanies a content change, so every save takes the
+        // write path — three SET updates in a row against the same node.
+        repository.save(note("r2", "GraphQL flexible query language v2").withEmbedding(basis(13)));
+        repository.save(note("r2", "GraphQL flexible query language v3").withEmbedding(basis(14)));
+        repository.save(note("r2", "GraphQL flexible query language v4").withEmbedding(basis(15)));
 
         List<SimilarityResult<MemoryNote>> results = repository.findSimilar(basis(15), 10);
 
@@ -127,9 +129,9 @@ class EmbeddingUpdateIntegrationTest {
     @Test
     @Order(4)
     void saveWithUnchangedEmbedding_keepsResultsStable() {
-        // Re-saving with the identical vector takes the skip-write path; the
-        // index must be unchanged afterwards.
-        repository.save(note("r2", "GraphQL flexible query language").withEmbedding(basis(15)));
+        // Re-saving with identical content and vector takes the skip-write
+        // path; the index must be unchanged afterwards.
+        repository.save(note("r2", "GraphQL flexible query language v4").withEmbedding(basis(15)));
 
         List<SimilarityResult<MemoryNote>> results = repository.findSimilar(basis(15), 10);
 
@@ -142,6 +144,22 @@ class EmbeddingUpdateIntegrationTest {
         Set<String> ids = results.stream().map(r -> r.item().id().value()).collect(Collectors.toSet());
         assertEquals(results.size(), ids.size(), "duplicate ids in KNN results: " + ids);
         assertTrue(ids.containsAll(Set.of("r1", "r2", "r3")), "expected all notes, got: " + ids);
+    }
+
+    @Test
+    @Order(5)
+    void embeddingAddedToExistingNote_getsIndexed() {
+        // A note saved without an embedding (e.g. legacy data) must get indexed
+        // the first time an embedding arrives, even though its content never changed.
+        repository.save(note("late-embed", "Late embedding note about Rust systems programming"));
+
+        List<SimilarityResult<MemoryNote>> before = repository.findSimilar(basis(20), 10);
+        assertTrue(before.stream().noneMatch(r -> r.item().id().value().equals("late-embed")),
+                "a note without an embedding must not appear in KNN results");
+
+        repository.save(note("late-embed", "Late embedding note about Rust systems programming").withEmbedding(basis(20)));
+
+        assertScore("late-embed", basis(20), 0.99, Double.MAX_VALUE);
     }
 
     /**

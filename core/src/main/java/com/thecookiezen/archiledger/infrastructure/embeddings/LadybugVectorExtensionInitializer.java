@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
- * Ensures the HNSW vector index on {@code NoteEmbedding.embedding} exists at
+ * Ensures the HNSW vector index on {@code MemoryNote.embedding} exists at
  * startup, using the managed {@link VectorIndexOperations} API from
  * spring-data-ladybugdb instead of hand-written {@code CALL ...} strings.
  * <p>
@@ -30,7 +30,7 @@ public class LadybugVectorExtensionInitializer {
     private static final Logger logger = LoggerFactory.getLogger(LadybugVectorExtensionInitializer.class);
 
     private static final String VECTOR_INDEX_NAME = "note_embedding_idx";
-    private static final String TABLE_NAME = "NoteEmbedding";
+    private static final String TABLE_NAME = "MemoryNote";
     private static final String EMBEDDING_PROPERTY = "embedding";
 
     private final Database database;

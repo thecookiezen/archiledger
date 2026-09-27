@@ -10,13 +10,12 @@ import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.L
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.LadybugNoteLink;
 import com.thecookiezen.archiledger.infrastructure.persistence.ladybugdb.model.LinkProjection;
 import com.thecookiezen.ladybugdb.spring.core.LadybugDBTemplate;
-import com.thecookiezen.ladybugdb.spring.mapper.ValueMappers;
 
 import org.springframework.stereotype.Repository;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,9 +34,11 @@ public class LadybugMemoryNoteRepository implements MemoryNoteRepository {
 
     @Override
     public MemoryNote save(MemoryNote note) {
-        LadybugMemoryNote ladybugNote = dbRepository.findById(note.id().value())
-                .orElse(new LadybugMemoryNote());
+        LadybugMemoryNote stored = dbRepository.findById(note.id().value()).orElse(null);
+        boolean creating = stored == null;
+        boolean contentChanged = !creating && !Objects.equals(stored.getContent(), note.content());
 
+        LadybugMemoryNote ladybugNote = stored != null ? stored : new LadybugMemoryNote();
         ladybugNote.setId(note.id().value());
         ladybugNote.setContent(note.content());
         ladybugNote.setKeywords(note.keywords());
@@ -47,8 +48,9 @@ public class LadybugMemoryNoteRepository implements MemoryNoteRepository {
         ladybugNote.setRetrievalCount(note.retrievalCount());
         LadybugMemoryNote saved = dbRepository.save(ladybugNote);
 
-        if (note.embedding() != null && note.embedding().length > 0) {
-            upsertEmbedding(note.id().value(), note.embedding());
+        if (note.embedding() != null && note.embedding().length > 0
+                && (creating || contentChanged || !Boolean.TRUE.equals(dbRepository.hasEmbedding(note.id().value())))) {
+            dbRepository.setEmbedding(note.id().value(), note.embedding());
         }
 
         for (NoteLink link : note.links()) {
@@ -199,30 +201,16 @@ public class LadybugMemoryNoteRepository implements MemoryNoteRepository {
     }
 
     /**
-     * Inserts the embedding on first write and updates it in place afterwards.
-     * <p>
-     * Updates go through {@code SET e.embedding = $embedding}, which is supported
-     * on a live HNSW index since LadybugDB 0.18.0 — the old
-     * delete-node-then-create-node workaround is gone. When the stored vector is
-     * already equal to the new one, the write is skipped entirely.
-     * <p>
-     * The existence read and the insert are not one atomic step: two concurrent
-     * first-time saves of the same note can both attempt the insert, in which
-     * case the second fails on the {@code NoteEmbedding.noteId} primary key
-     * constraint rather than creating a duplicate.
+     * The embedding lives on the note node ({@code MemoryNote.embedding}) but is
+     * deliberately not a mapped entity property: the generic save path SETs all
+     * mapped properties unconditionally, so mapping the vector there would
+     * rewrite it (and churn the HNSW index) on every save, including
+     * retrieval-count updates. Instead {@code save()} writes it explicitly via
+     * {@code SET n.embedding} — creating it on first save and refreshing it only
+     * when the content changed or the note has no vector yet, since the vector is
+     * derived from the content. Embedding writes therefore happen once per
+     * content change, not per save.
      */
-    private void upsertEmbedding(String noteId, float[] embedding) {
-        List<float[]> current = template.query(
-                "MATCH (e:NoteEmbedding {noteId: $noteId}) RETURN e.embedding",
-                Map.of("noteId", noteId),
-                row -> ValueMappers.asFloatArray(row.getValue(0)));
-
-        if (current.isEmpty()) {
-            dbRepository.saveEmbedding(noteId, embedding);
-        } else if (!Arrays.equals(current.get(0), embedding)) {
-            dbRepository.updateEmbedding(noteId, embedding);
-        }
-    }
 
     private double applyTemperatureScaling(double distance, double temperature) {
         if (temperature <= 0.0) {

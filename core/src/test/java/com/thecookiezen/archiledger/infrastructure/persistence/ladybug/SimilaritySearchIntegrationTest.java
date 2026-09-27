@@ -60,7 +60,7 @@ class SimilaritySearchIntegrationTest {
 
     @BeforeEach
     void cleanDatabase() {
-        dbRepository.deleteAllNotesWithEmbeddings();
+        dbRepository.deleteAllNotes();
         vectorExtensionInitializer.recreateIndex();
     }
 

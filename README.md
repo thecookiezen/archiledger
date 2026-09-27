@@ -361,7 +361,7 @@ Tune the HNSW (Hierarchical Navigable Small World) index parameters for optimal 
 
 #### Index Maintenance
 
-Embedding updates are applied in place with a single `SET` on the indexed vector property (supported on a live HNSW index since LadybugDB 0.18), so re-saving a note no longer deletes and recreates its embedding node. Repeated updates do not degrade correctness.
+Embeddings are stored as a property of the note node (`MemoryNote.embedding`) and indexed with LadybugDB's HNSW vector extension. An embedding is written once on first save and rewritten only when the note's content changes (the vector is derived from the content) via a single in-place `SET` on the indexed property — never on every save, so repeated saves and retrieval-count updates do not touch the index.
 
 HNSW does accumulate dead edges over many updates and deletes, which slowly reduces recall and wastes memory. For write-heavy workloads, schedule a periodic index rebuild — a DROP + CREATE maintenance operation available via `LadybugVectorExtensionInitializer#recreateIndex()`. This is routine maintenance, not a correctness fix.
 

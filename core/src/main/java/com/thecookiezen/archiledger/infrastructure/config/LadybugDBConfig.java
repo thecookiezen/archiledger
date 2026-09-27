@@ -80,25 +80,12 @@ public class LadybugDBConfig {
     private void initializeSchema(Database db) {
         try (Connection conn = new Connection(db)) {
             try (var r1 = conn.query(
-                    "CREATE NODE TABLE IF NOT EXISTS MemoryNote(id STRING PRIMARY KEY, content STRING, keywords STRING[], context STRING, tags STRING[], timestamp STRING, retrievalCount INT64)")) {
+                    "CREATE NODE TABLE IF NOT EXISTS MemoryNote(id STRING PRIMARY KEY, content STRING, keywords STRING[], context STRING, tags STRING[], timestamp STRING, retrievalCount INT64, embedding FLOAT[%d])"
+                            .formatted(embeddingDimensions))) {
                 if (!r1.isSuccess()) {
                     throw new RuntimeException("Failed to create MemoryNote table: " + r1.getErrorMessage());
                 }
                 logger.info("MemoryNote node table ready");
-            }
-            try (var re = conn.query(
-                    "CREATE NODE TABLE IF NOT EXISTS NoteEmbedding(noteId STRING PRIMARY KEY, embedding FLOAT[%d])".formatted(embeddingDimensions))) {
-                if (!re.isSuccess()) {
-                    throw new RuntimeException("Failed to create NoteEmbedding table: " + re.getErrorMessage());
-                }
-                logger.info("NoteEmbedding node table ready");
-            }
-            try (var rl = conn.query(
-                    "CREATE REL TABLE IF NOT EXISTS HAS_EMBEDDING(FROM MemoryNote TO NoteEmbedding)")) {
-                if (!rl.isSuccess()) {
-                    throw new RuntimeException("Failed to create HAS_EMBEDDING table: " + rl.getErrorMessage());
-                }
-                logger.info("HAS_EMBEDDING relationship table ready");
             }
             try (var r2 = conn.query(
                     "CREATE REL TABLE IF NOT EXISTS LINKED_TO(FROM MemoryNote TO MemoryNote, name STRING, relationType STRING, context STRING)")) {
