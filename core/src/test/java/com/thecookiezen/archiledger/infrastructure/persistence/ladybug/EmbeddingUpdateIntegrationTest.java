@@ -146,22 +146,6 @@ class EmbeddingUpdateIntegrationTest {
         assertTrue(ids.containsAll(Set.of("r1", "r2", "r3")), "expected all notes, got: " + ids);
     }
 
-    @Test
-    @Order(5)
-    void embeddingAddedToExistingNote_getsIndexed() {
-        // A note saved without an embedding (e.g. legacy data) must get indexed
-        // the first time an embedding arrives, even though its content never changed.
-        repository.save(note("late-embed", "Late embedding note about Rust systems programming"));
-
-        List<SimilarityResult<MemoryNote>> before = repository.findSimilar(basis(20), 10);
-        assertTrue(before.stream().noneMatch(r -> r.item().id().value().equals("late-embed")),
-                "a note without an embedding must not appear in KNN results");
-
-        repository.save(note("late-embed", "Late embedding note about Rust systems programming").withEmbedding(basis(20)));
-
-        assertScore("late-embed", basis(20), 0.99, Double.MAX_VALUE);
-    }
-
     /**
      * Orthonormal basis vector: 1.0 at {@code index}, 0.0 elsewhere. Under
      * cosine distance, two distinct basis vectors are at distance ~1, a

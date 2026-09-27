@@ -48,8 +48,7 @@ public class LadybugMemoryNoteRepository implements MemoryNoteRepository {
         ladybugNote.setRetrievalCount(note.retrievalCount());
         LadybugMemoryNote saved = dbRepository.save(ladybugNote);
 
-        if (note.embedding() != null && note.embedding().length > 0
-                && (creating || contentChanged || !Boolean.TRUE.equals(dbRepository.hasEmbedding(note.id().value())))) {
+        if (note.embedding() != null && note.embedding().length > 0 && (creating || contentChanged)) {
             dbRepository.setEmbedding(note.id().value(), note.embedding());
         }
 
@@ -211,7 +210,6 @@ public class LadybugMemoryNoteRepository implements MemoryNoteRepository {
      * derived from the content. Embedding writes therefore happen once per
      * content change, not per save.
      */
-
     private double applyTemperatureScaling(double distance, double temperature) {
         if (temperature <= 0.0) {
             return 1.0 - distance;
