@@ -30,7 +30,7 @@
         <spring-boot.version>4.1.1</spring-boot.version>
         <spring-framework.version>7.0.9</spring-framework.version>
         <spring-ai.version>2.0.1</spring-ai.version>
-        <slf4j.version>2.0.17</slf4j.version>
+        <slf4j.version>2.0.20</slf4j.version>
         <logback.version>1.5.16</logback.version>
         <netty.version>4.1.118.Final</netty.version>
         <assertj.version>3.27.7</assertj.version>
